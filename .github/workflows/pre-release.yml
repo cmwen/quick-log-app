@@ -32,10 +32,10 @@ jobs:
     timeout-minutes: 45
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Setup Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
         java-version: '17'
@@ -121,7 +121,7 @@ jobs:
         cp web-${VERSION}.zip build/artifacts/
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ inputs.release_type }}-${{ inputs.version_name }}
         path: build/artifacts/*
