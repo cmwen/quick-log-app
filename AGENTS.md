@@ -1,6 +1,6 @@
 # Agent Configuration and Instructions
 
-This document provides guidance for AI agents and automated tools working with this Flutter template repository.
+This document provides guidance for AI agents and automated tools working with this Android Flutter app repository.
 
 ## 🎯 Quick Reference for AI Agents
 
@@ -14,12 +14,10 @@ This document provides guidance for AI agents and automated tools working with t
 - `test/widget_test.dart` (imports)
 - `android/app/build.gradle.kts` (namespace, applicationId)
 - `android/app/src/main/AndroidManifest.xml` (label)
-- `web/manifest.json` (name, short_name)
-- iOS/macOS bundle identifiers (Xcode)
 
 ## Repository Overview
 
-This is a production-ready Flutter template with AI-powered development workflow, optimized build system (Java 17, parallel builds, caching), and comprehensive CI/CD. All agents have access to VS Code tools including terminal, debugger, test runner, and codebase explorer.
+This is an Android-only Flutter app with AI-powered development workflow, optimized build system (Java 17, parallel builds, caching), and comprehensive CI/CD. All agents have access to VS Code tools including terminal, debugger, test runner, and codebase explorer.
 
 ## AI Agents Overview
 
@@ -41,7 +39,7 @@ This template includes 6 specialized GitHub Copilot agents:
 - **Framework**: Flutter 3.10.1+
 - **Language**: Dart 3.10.1+
 - **Build System**: Java 17, Gradle 8.0+ with parallel builds and caching
-- **Platforms**: Android, iOS, Web, Linux, macOS, Windows
+- **Platform**: Android only
 - **Package Manager**: pub (pubspec.yaml)
 - **Testing**: flutter_test, Widget testing, Integration testing
 - **Linting**: flutter_lints 6.0.0

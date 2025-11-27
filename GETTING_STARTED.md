@@ -1,6 +1,6 @@
 # Getting Started Guide
 
-Welcome! This guide will help you customize this Flutter template for your new app from scratch.
+Welcome! This guide will help you set up and customize the Quick Log Android app.
 
 ## 📋 Prerequisites
 
@@ -9,7 +9,7 @@ Before starting, ensure you have:
 - ✅ Flutter SDK 3.10.1+ ([Install Guide](https://docs.flutter.dev/get-started/install))
 - ✅ Dart 3.10.1+
 - ✅ Java 17+ (for Android builds)
-- ✅ Android Studio or Xcode (for mobile development)
+- ✅ Android Studio or Android SDK
 - ✅ Git
 - ✅ VS Code with GitHub Copilot (recommended for AI assistance)
 
@@ -21,102 +21,90 @@ java -version  # Should show version 17+
 
 ## 🚀 Quick Start Checklist
 
-Follow these steps in order to customize the template for your app:
+Follow these steps in order to set up the app:
 
 ### Step 1: Clone and Setup
 
 ```bash
-# Clone this template
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+# Clone this repository
+git clone https://github.com/cmwen/quick-log-app.git
+cd quick-log-app
 
 # Get dependencies
 flutter pub get
 
 # Verify everything works
-flutter test
 flutter analyze
 ```
 
-### Step 2: Rename Your App
+### Step 2: Run on Android
 
-**Important**: You need to update the app name in multiple locations. Use AI agents or search/replace:
+```bash
+# List available devices
+flutter devices
+
+# Run on connected Android device or emulator
+flutter run
+
+# Build debug APK
+flutter build apk --debug
+
+# Build release APK
+flutter build apk --release
+```
+
+### Step 3: Customize Your App (Optional)
+
+If you want to customize the app:
 
 #### Files to Update:
 
 1. **`pubspec.yaml`** (Line 1):
    ```yaml
-   name: your_app_name  # Change from min_flutter_template
+   name: your_app_name  # Change from quick_log_app
    description: "Your app description"
    ```
 
 2. **`lib/main.dart`** (Import statement):
    ```dart
-   import 'package:your_app_name/main.dart';  // Update import
+   import 'package:your_app_name/screens/main_screen.dart';
    ```
 
-3. **`test/widget_test.dart`** (Import):
-   ```dart
-   import 'package:your_app_name/main.dart';
-   ```
-
-4. **`android/app/build.gradle.kts`** (Lines 36-37, 50):
+3. **`android/app/build.gradle.kts`**:
    ```kotlin
    namespace = "com.yourcompany.yourapp"
    applicationId = "com.yourcompany.yourapp"
    ```
 
-5. **`android/app/src/main/AndroidManifest.xml`** (Line 2):
+4. **`android/app/src/main/AndroidManifest.xml`**:
    ```xml
    android:label="Your App Name"
    ```
-
-6. **`web/manifest.json`**:
-   ```json
-   {
-     "name": "Your App Name",
-     "short_name": "YourApp"
-   }
-   ```
-
-7. **iOS Bundle Identifier**:
-   - Open `ios/Runner.xcodeproj` in Xcode
-   - Select Runner → General → Bundle Identifier
-   - Change to `com.yourcompany.yourapp`
-
-8. **macOS Bundle Identifier**:
-   - Open `macos/Runner.xcodeproj` in Xcode
-   - Update bundle identifier similarly
 
 #### Using AI to Rename
 
 Ask your AI agent:
 ```
-Please rename this Flutter app from "min_flutter_template" to "my_awesome_app" 
-and update the package name from "com.cmwen.min_flutter_template" to "com.mycompany.my_awesome_app". 
+Please rename this Flutter app from "quick_log_app" to "my_app_name" 
+and update the package name from "com.cmwen.quick_log_app" to "com.mycompany.my_app". 
 Update all necessary files including pubspec.yaml, build.gradle.kts, AndroidManifest.xml, 
-iOS bundle identifier, web manifest, and Dart imports.
+and Dart imports.
 ```
 
-### Step 3: Create App Icon
+### Step 4: Create App Icon
 
-You have three options:
+Use the provided prompt to generate a custom icon:
 
-#### Option A: AI-Generated Icon (Recommended)
+```
+@icon-generation.prompt.md
 
-1. Use the provided prompt:
-   ```
-   @icon-generation.prompt.md
-   
-   Create an app launcher icon for [describe your app]. 
-   Style: [flat/gradient/minimal], 
-   Primary color: #[hex], 
-   Symbol: [describe icon concept]
-   ```
+Create an app launcher icon for [describe your app]. 
+Style: [flat/gradient/minimal], 
+Primary color: #[hex], 
+Symbol: [describe icon concept]
+```
 
-2. Save the generated 1024×1024 PNG to `assets/icon/app_icon.png`
-
-#### Option B: Automated with flutter_launcher_icons
+Or use flutter_launcher_icons:
 
 1. Add to `pubspec.yaml`:
    ```yaml
@@ -125,13 +113,6 @@ You have three options:
    
    flutter_launcher_icons:
      android: true
-     ios: true
-     web:
-       generate: true
-     windows:
-       generate: true
-     macos:
-       generate: true
      image_path: "assets/icon/app_icon.png"
    ```
 
@@ -140,33 +121,6 @@ You have three options:
    flutter pub get
    flutter pub run flutter_launcher_icons
    ```
-
-#### Option C: Manual Icon Placement
-
-Place your icons manually in these directories:
-- Android: `android/app/src/main/res/mipmap-*/ic_launcher.png` (48, 72, 96, 144, 192 px)
-- iOS: `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
-- Web: `web/icons/` (192px, 512px)
-- macOS: `macos/Runner/Assets.xcassets/AppIcon.appiconset/` (16-1024px)
-
-See [icon-generation.prompt.md](.github/prompts/icon-generation.prompt.md) for detailed sizing requirements.
-
-### Step 4: Customize App Theme
-
-Edit `lib/main.dart`:
-
-```dart
-MaterialApp(
-  title: 'Your App Name',
-  theme: ThemeData(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blue,  // Change to your brand color
-    ),
-    useMaterial3: true,
-  ),
-  home: const MyHomePage(title: 'Your App Home'),
-)
-```
 
 ### Step 5: Set Up GitHub Repository
 
@@ -177,13 +131,7 @@ MaterialApp(
    git remote set-url origin https://github.com/yourusername/your-repo-name.git
    ```
 
-3. **Update GitHub Pages URL** in `astro/astro.config.mjs`:
-   ```javascript
-   const GITHUB_USERNAME = 'yourusername';
-   const REPO_NAME = 'your-repo-name';
-   ```
-
-4. **Configure signing secrets** (for releases):
+3. **Configure signing secrets** (for releases):
    
    Generate keystore:
    ```bash
@@ -193,29 +141,29 @@ MaterialApp(
    ```
    
    Add GitHub Secrets:
-   - `ANDROID_KEYSTORE_BASE64`: `base64 -i release-keystore.jks | pbcopy`
+   - `ANDROID_KEYSTORE_BASE64`: `base64 -i release-keystore.jks`
    - `ANDROID_KEYSTORE_PASSWORD`: Your keystore password
    - `ANDROID_KEY_ALIAS`: `release`
    - `ANDROID_KEY_PASSWORD`: Your key password
 
-5. **Push to GitHub**:
+4. **Push to GitHub**:
    ```bash
    git add .
-   git commit -m "Initial setup with custom app name"
+   git commit -m "Initial setup"
    git push -u origin main
    ```
 
 ### Step 6: Test Your Setup
 
 ```bash
-# Run on different platforms
-flutter run -d chrome      # Web
-flutter run -d macos       # macOS
-flutter run -d android     # Android (connected device/emulator)
+# Run on Android emulator or device
+flutter run
 
-# Build release
+# Build release APK
 flutter build apk --release
-flutter build web --release
+
+# Build App Bundle for Play Store
+flutter build appbundle --release
 
 # Run tests
 flutter test
@@ -229,93 +177,23 @@ This template includes custom GitHub Copilot agents to accelerate development:
 ### Available Agents
 
 1. **@product-owner** - Define features and requirements
-   ```
-   @product-owner I need a login screen with email/password authentication
-   ```
-
 2. **@experience-designer** - Design user flows and interfaces
-   ```
-   @experience-designer Design a user flow for the login and registration process
-   ```
-
 3. **@architect** - Plan technical architecture
-   ```
-   @architect What's the best way to implement authentication with JWT tokens?
-   ```
-
 4. **@researcher** - Research dependencies and best practices
-   ```
-   @researcher Find the best Flutter packages for local storage and authentication
-   ```
-
 5. **@flutter-developer** - Implement features
-   ```
-   @flutter-developer Implement the login screen with form validation
-   ```
-
 6. **@doc-writer** - Create documentation
-   ```
-   @doc-writer Document the authentication flow and API endpoints
-   ```
 
 ### Example Workflow
 
-1. **Define requirements**:
-   ```
-   @product-owner I want to build a note-taking app with categories, 
-   search, and local storage. Create user stories with acceptance criteria.
-   ```
-
-2. **Design UX**:
-   ```
-   @experience-designer Based on the product requirements, design the 
-   information architecture and main user flows for the note-taking app.
-   ```
-
-3. **Research dependencies**:
-   ```
-   @researcher What are the best packages for local database, 
-   state management, and markdown rendering in Flutter?
-   ```
-
-4. **Plan architecture**:
-   ```
-   @architect Design the app architecture including data models, 
-   repositories, and state management for the note-taking app.
-   ```
-
-5. **Implement features**:
-   ```
-   @flutter-developer Implement the note list screen with 
-   category filtering and search functionality.
-   ```
-
-6. **Document**:
-   ```
-   @doc-writer Create API documentation for the note repository 
-   and usage examples.
-   ```
+```
+@flutter-developer Add a new screen to view entry statistics with charts
+```
 
 ## 📚 Key Documentation
 
-After setup, familiarize yourself with:
-
 - [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md) - Build performance tips
 - [AGENTS.md](AGENTS.md) - AI agent configuration details
-- [AI_PROMPTING_GUIDE.md](AI_PROMPTING_GUIDE.md) - AI prompting best practices
 - [TESTING.md](TESTING.md) - Testing guide
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contributing guidelines
-
-## 🎯 Next Steps
-
-Once setup is complete:
-
-1. **Plan your features** with @product-owner
-2. **Design your UI** with @experience-designer
-3. **Set up state management** (Provider, Riverpod, Bloc)
-4. **Implement your first feature** with @flutter-developer
-5. **Write tests** for your features
-6. **Deploy** your first release
 
 ## 🐛 Troubleshooting
 
@@ -330,12 +208,6 @@ java -version
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 ```
 
-**Flutter not found**:
-```bash
-# Add Flutter to PATH
-export PATH="$PATH:/path/to/flutter/bin"
-```
-
 **Gradle build fails**:
 ```bash
 cd android
@@ -345,49 +217,34 @@ flutter clean
 flutter pub get
 ```
 
-### Icon Issues
+### App Not Opening on Device
 
-**Icons not updating**:
-```bash
-flutter clean
-flutter pub get
-flutter pub run flutter_launcher_icons
-```
+1. **Check Flutter installation**: `flutter doctor -v`
+2. **Verify Android SDK**: Ensure API level 21+ is installed
+3. **Check device connection**: `flutter devices`
+4. **Enable USB debugging** on your Android device
+5. **Run in verbose mode**: `flutter run -v`
+
+### Location Not Working
+
+1. **Grant location permissions** when prompted
+2. **Enable location services** on the device
+3. **Check GPS availability**: Some emulators need location simulation
 
 ### Import Errors After Renaming
 
 ```bash
-# Regenerate code
 flutter clean
 flutter pub get
 dart fix --apply
 ```
 
-## 💡 Pro Tips
-
-1. **Use VS Code snippets** - Type `stless` for StatelessWidget, `stful` for StatefulWidget
-2. **Hot reload** - Press `r` in terminal or use VS Code's hot reload button
-3. **Extract widgets** - Select code → Right-click → Refactor → Extract Widget
-4. **Generate constructors** - Put cursor on class → Quick Fix → Generate constructor
-5. **Use AI agents frequently** - They understand the project structure and best practices
-
-## 🆘 Getting Help
-
-- **Flutter Docs**: https://docs.flutter.dev
-- **Pub.dev Packages**: https://pub.dev
-- **Community**: https://flutter.dev/community
-- **Stack Overflow**: Tag [flutter]
-
 ## ✅ Setup Complete!
 
 Once you've completed all steps, you should have:
-- ✅ App renamed with custom package name
-- ✅ Custom app icon on all platforms
+- ✅ App running on Android device/emulator
 - ✅ GitHub repository configured
-- ✅ CI/CD workflows ready
+- ✅ CI/CD workflows ready for releases
 - ✅ AI agents configured for development
-- ✅ First build successful
 
-**You're ready to build your app!** 🎉
-
-Start with: `@product-owner What features should I implement first for [your app concept]?`
+**You're ready to use Quick Log!** 🎉

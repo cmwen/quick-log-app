@@ -38,7 +38,7 @@ The icon should be:
 For AI image generation or designer:
 
 **Prompt for Icon Generator:**
-"Create a mobile app icon for a logging application. Design a rounded square icon with a blue (#2196F3) tag/label shape in the center. Add a white pen or pencil symbol overlaying the tag. Include a small location pin dot at the bottom. Use Material Design 3 style with smooth gradients, clean lines, and a modern minimal aesthetic. The icon should be suitable for both iOS and Android platforms."
+"Create a mobile app icon for a logging application. Design a rounded square icon with a blue (#2196F3) tag/label shape in the center. Add a white pen or pencil symbol overlaying the tag. Include a small location pin dot at the bottom. Use Material Design 3 style with smooth gradients, clean lines, and a modern minimal aesthetic. The icon should be suitable for Android platform."
 
 **Alternative Simpler Design:**
 "Blue rounded square icon with a white tag/label symbol and a small white pen icon in the corner. Material Design 3 style, minimal and clean."
@@ -54,25 +54,6 @@ To generate proper app icons, you would need to create these sizes:
 - xxhdpi: 144x144
 - xxxhdpi: 192x192
 
-### iOS
-- 20x20 (iPhone Notification)
-- 29x29 (Settings)
-- 40x40 (Spotlight)
-- 58x58 (Settings @2x)
-- 60x60 (iPhone App)
-- 76x76 (iPad App)
-- 80x80 (Spotlight @2x)
-- 87x87 (Settings @3x)
-- 120x120 (iPhone App @2x)
-- 152x152 (iPad App @2x)
-- 167x167 (iPad Pro App @2x)
-- 180x180 (iPhone App @3x)
-- 1024x1024 (App Store)
-
-### Web
-- 192x192
-- 512x512
-
 ## Using Flutter Launcher Icons Package
 
 To automatically generate all required icon sizes, use the `flutter_launcher_icons` package:
@@ -84,7 +65,6 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: true
   image_path: "assets/icon/icon.png"  # Your 1024x1024 source icon
   adaptive_icon_background: "#2196F3"
   adaptive_icon_foreground: "assets/icon/foreground.png"
@@ -102,8 +82,6 @@ The app currently uses the default Flutter icon. To update:
 2. Use flutter_launcher_icons package to generate all sizes
 3. Or manually replace icons in:
    - `android/app/src/main/res/mipmap-*/ic_launcher.png`
-   - `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
-   - `web/icons/`
 
 ## Notes for AI Implementation
 

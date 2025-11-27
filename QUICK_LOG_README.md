@@ -1,8 +1,8 @@
 # Quick Log 📝
 
-A tag-first logging Flutter application for quick note-taking with automatic location tracking.
+A tag-first logging Android application for quick note-taking with automatic location tracking.
 
-![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Web-blue)
+![Platform](https://img.shields.io/badge/platform-Android-blue)
 ![Flutter](https://img.shields.io/badge/Flutter-3.10.1+-02569B?logo=flutter)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -34,14 +34,14 @@ A tag-first logging Flutter application for quick note-taking with automatic loc
 - Flutter SDK 3.10.1 or higher
 - Dart 3.10.1 or higher
 - Android Studio / VS Code with Flutter extensions
-- For Android: Android SDK API 21+
-- For iOS: Xcode 14+ (iOS 12+)
+- Android SDK API 21+ (Android 5.0+)
+- Java 17+
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/quick-log-app.git
+git clone https://github.com/cmwen/quick-log-app.git
 cd quick-log-app
 ```
 
@@ -67,12 +67,6 @@ flutter build apk --release
 
 # Android App Bundle (for Play Store)
 flutter build appbundle --release
-
-# iOS
-flutter build ios --release
-
-# Web
-flutter build web --release
 ```
 
 ## 📖 How to Use
@@ -191,8 +185,6 @@ lib/
 ### Phase 3 (Future)
 - [ ] Tag relationship suggestions
 - [ ] Data backup/restore
-- [ ] Cloud sync (optional)
-- [ ] Desktop support (Linux, macOS, Windows)
 - [ ] Widgets for quick logging
 
 ## 🤝 Contributing
@@ -230,7 +222,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Version**: 1.0.0+1
 - **Status**: Beta - Core features complete
-- **Platforms**: Android ✅ | iOS ✅ | Web ✅
+- **Platform**: Android ✅
 
 ---
 

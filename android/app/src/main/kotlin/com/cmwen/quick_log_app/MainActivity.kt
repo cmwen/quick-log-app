@@ -1,4 +1,4 @@
-package com.cmwen.min_flutter_template
+package com.cmwen.quick_log_app
 
 import io.flutter.embedding.android.FlutterActivity
 
