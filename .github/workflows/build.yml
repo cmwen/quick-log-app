@@ -1,4 +1,4 @@
-name: Flutter Build
+name: Flutter Build (Android)
 
 on:
   push:
@@ -66,9 +66,6 @@ jobs:
     - name: Build App Bundle
       run: flutter build appbundle --release
     
-    - name: Build Web
-      run: flutter build web --release
-    
     - name: Upload APK
       uses: actions/upload-artifact@v5
       with:
@@ -81,13 +78,6 @@ jobs:
       with:
         name: android-bundle
         path: build/app/outputs/bundle/release/app-release.aab
-        retention-days: 7
-    
-    - name: Upload Web Build
-      uses: actions/upload-artifact@v5
-      with:
-        name: web-build
-        path: build/web
         retention-days: 7
     
     - name: Upload Coverage

@@ -1,142 +1,115 @@
-# Minimal Flutter App Template
+# Quick Log - Android App
 
-A production-ready Flutter template with **AI-powered development workflow**, optimized build system, and comprehensive documentation. Start building your cross-platform app in minutes, not hours.
+An Android-only tag-first logging application for quick note-taking with location tracking. Built with Flutter for optimal Android performance.
 
-## ✨ What Makes This Template Special
+## ✨ Features
 
-- 🤖 **AI-First Development**: 6 custom GitHub Copilot agents (product owner, UX designer, architect, developer, researcher, doc writer)
-- ⚡ **Optimized Build System**: Java 17, parallel builds, multi-level caching - builds 60% faster
-- 🚀 **Production CI/CD**: GitHub Actions workflows with caching, testing, and signed releases
-- 📱 **True Cross-Platform**: Android, iOS, Web, Linux, macOS, Windows - all configured
-- 🎨 **Material Design 3**: Beautiful, accessible UI out of the box
-- 📚 **Extensive Documentation**: Step-by-step guides for first-time users
-- 🧪 **Testing Framework**: Unit, widget, and integration testing ready
-- 🔧 **VS Code Optimized**: Agents configured with terminal, debugger, and VS Code API access
+- 🏷️ **Tag-First Logging**: Quickly categorize entries with customizable tags
+- 📍 **Location Tracking**: Automatic GPS location capture with geocoding
+- 📝 **Optional Notes**: Add detailed notes to any entry
+- 🗄️ **Local Database**: All data stored securely on-device with SQLite
+- 🎨 **Material Design 3**: Beautiful, modern Android UI
+- 🌙 **Dark Mode**: Automatic theme switching based on system settings
 
-## 🚀 Quick Start (5 Minutes)
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - ✅ Flutter SDK 3.10.1+
 - ✅ Dart 3.10.1+
-- ✅ Java 17+ (for Android)
-- ✅ VS Code + GitHub Copilot (recommended)
+- ✅ Java 17+
+- ✅ Android SDK with API level 21+ (Android 5.0+)
+- ✅ Android device or emulator
 
-Verify: `flutter doctor -v && java -version`
+Verify setup: `flutter doctor -v && java -version`
 
 ### 1. Clone and Setup
 
 ```bash
-# Clone this template
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+# Clone the repository
+git clone https://github.com/cmwen/quick-log-app.git
+cd quick-log-app
 
 # Get dependencies
 flutter pub get
 
 # Verify everything works
-flutter test && flutter analyze
+flutter analyze
 ```
 
-### 2. Customize Your App (Use AI!)
-
-```
-@flutter-developer Please rename this app from "min_flutter_template" 
-to "my_awesome_app" with package "com.mycompany.my_awesome_app"
-```
-
-**See [GETTING_STARTED.md](GETTING_STARTED.md) for complete setup guide.**
-
-### 3. Generate App Icon
-
-```
-@icon-generation.prompt.md Create an app icon for my [describe app] 
-with primary color #3B82F6 in minimal style
-```
-
-### 4. Build and Run
+### 2. Run on Android
 
 ```bash
-flutter run -d chrome      # Web
-flutter run -d android     # Android
-flutter build apk          # Release APK
+# Run on connected Android device or emulator
+flutter run
+
+# Build debug APK
+flutter build apk --debug
+
+# Build release APK
+flutter build apk --release
+
+# Build release App Bundle (for Play Store)
+flutter build appbundle --release
 ```
 
-**Full customization guide: [APP_CUSTOMIZATION.md](APP_CUSTOMIZATION.md)**
+## 📱 Android Permissions
 
-## 🤖 AI-Powered Development
+The app requires the following permissions:
 
-### Meet Your AI Team
+| Permission | Purpose |
+|------------|---------|
+| `ACCESS_FINE_LOCATION` | GPS location for accurate tracking |
+| `ACCESS_COARSE_LOCATION` | Network-based location fallback |
+| `INTERNET` | Geocoding service for location names |
 
-This template includes 6 specialized AI agents for VS Code:
+Users will be prompted to grant location permissions on first use.
 
-| Agent | Purpose | Example Usage |
-|-------|---------|---------------|
-| **@product-owner** | Define features & requirements | `@product-owner Create user stories for a note-taking app` |
-| **@experience-designer** | Design UX & user flows | `@experience-designer Design the login and onboarding flow` |
-| **@architect** | Plan technical architecture | `@architect How should I structure authentication?` |
-| **@researcher** | Find packages & best practices | `@researcher Best packages for local database in Flutter` |
-| **@flutter-developer** | Implement features & fix bugs | `@flutter-developer Implement login screen with validation` |
-| **@doc-writer** | Write documentation | `@doc-writer Document the authentication API` |
+## 🏗️ Project Structure
 
-### Example Workflow
-
-```bash
-# 1. Define your app concept
-@product-owner I want to build a recipe app with categories, 
-search, and favorites. Create user stories and MVP scope.
-
-# 2. Design the experience
-@experience-designer Based on the requirements, design the 
-information architecture and main user flows.
-
-# 3. Research dependencies
-@researcher What packages do I need for local storage, 
-images, and JSON parsing?
-
-# 4. Plan architecture
-@architect Design the app architecture with Riverpod state management 
-and repository pattern for recipes.
-
-# 5. Implement features
-@flutter-developer Implement the recipe list screen with 
-category filtering and search.
-
-# 6. Write documentation
-@doc-writer Document the recipe repository API and usage examples.
 ```
-
-**All agents have access to VS Code terminal, debugger, and test runner!**
+├── lib/
+│   ├── main.dart              # App entry point
+│   ├── data/
+│   │   └── database_helper.dart  # SQLite database operations
+│   ├── models/
+│   │   ├── log_entry.dart     # Entry data model
+│   │   └── log_tag.dart       # Tag data model
+│   ├── screens/
+│   │   ├── main_screen.dart   # Main logging screen
+│   │   ├── entries_screen.dart # View past entries
+│   │   └── tags_screen.dart   # Manage tags
+│   └── widgets/
+│       └── tag_chip.dart      # Reusable tag widget
+├── android/                   # Android platform configuration
+├── test/                      # Unit and widget tests
+└── pubspec.yaml              # Dependencies
+```
 
 ## ⚡ Build Performance
 
-This template includes **comprehensive build optimizations**:
+Optimized for fast Android builds:
 
-- **Java 17 baseline** for modern Android development
-- **Parallel builds** with 4 workers (local) / 2 workers (CI)
-- **Multi-level caching**: Gradle, Flutter SDK, pub packages, npm
+- **Java 17** baseline for modern Android development
+- **Parallel Gradle builds** with 4 workers (local)
 - **R8 code shrinking**: 40-60% smaller release APKs
-- **Concurrency control**: Cancels duplicate CI runs
-- **CI-optimized Gradle properties**: Separate config for CI vs local
+- **Build caching** enabled for faster incremental builds
 
 ### Expected Build Times
 
-| Environment | Build Type | Time |
-|------------|-----------|------|
-| Local (cached) | Debug APK | 30-60s |
-| Local | Release APK | 1-2 min |
-| CI (cached) | Full workflow | 3-5 min |
-
-**See [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md) for details.**
+| Build Type | Time |
+|------------|------|
+| Debug APK (cached) | 30-60s |
+| Release APK | 1-2 min |
+| App Bundle | 1-2 min |
 
 ## 🔄 CI/CD Workflows
 
 ### Automated Workflows
 
-- **build.yml**: Tests, lints, builds on every push (30min timeout)
-- **release.yml**: Signed releases on version tags (45min timeout)
-- **pre-release.yml**: Manual beta/alpha releases (workflow_dispatch)
-- **deploy-website.yml**: Deploys docs to GitHub Pages
+- **build.yml**: Tests, lints, builds APK on every push
+- **release.yml**: Signed releases on version tags
+- **pre-release.yml**: Manual beta/alpha releases
 
 ### Setup Signed Releases
 
@@ -145,7 +118,7 @@ This template includes **comprehensive build optimizations**:
 keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias release
 
 # 2. Add GitHub Secrets
-- ANDROID_KEYSTORE_BASE64: `base64 -i release.jks | pbcopy`
+- ANDROID_KEYSTORE_BASE64: `base64 -i release.jks`
 - ANDROID_KEYSTORE_PASSWORD
 - ANDROID_KEY_ALIAS: release
 - ANDROID_KEY_PASSWORD
@@ -154,69 +127,60 @@ keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 100
 git tag v1.0.0 && git push --tags
 ```
 
-## Project Structure
-
-```
-├── lib/main.dart         # App entry point
-├── test/                 # Tests
-├── android/              # Android configuration
-├── ios/                  # iOS configuration
-├── web/                  # Web configuration
-├── astro/                # Documentation website
-├── docs/                 # AI prompting guides
-└── pubspec.yaml          # Dependencies
-```
-
 ## 📚 Documentation
 
-### Getting Started
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Complete setup guide for first-time users ⭐
-- **[APP_CUSTOMIZATION.md](APP_CUSTOMIZATION.md)** - Comprehensive customization checklist & AI prompts ⭐
-
-### Development
-- [AI_PROMPTING_GUIDE.md](AI_PROMPTING_GUIDE.md) - AI agent best practices
-- [AGENTS.md](AGENTS.md) - AI agent configuration reference
+- [GETTING_STARTED.md](GETTING_STARTED.md) - Detailed setup guide
+- [APP_CUSTOMIZATION.md](APP_CUSTOMIZATION.md) - Customization options
 - [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md) - Build performance details
 - [TESTING.md](TESTING.md) - Testing guide
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 
-### Prompts
-- `.github/prompts/icon-generation.prompt.md` - Icon generation guide
+## 🛠️ Dependencies
 
-## 💡 Pro Tips
+| Package | Purpose |
+|---------|---------|
+| `provider` | State management |
+| `sqflite` | Local SQLite database |
+| `path_provider` | File system paths |
+| `geolocator` | GPS location services |
+| `geocoding` | Reverse geocoding |
+| `intl` | Date/time formatting |
+| `flutter_chips_input` | Tag input UI |
 
-1. **Start with @product-owner** - Define clear requirements before coding
-2. **Use @experience-designer** - Plan UX before implementing screens
-3. **Let @researcher find packages** - Don't waste time searching pub.dev
-4. **@flutter-developer has terminal access** - Can run tests, format, build
-5. **Save documentation to docs/** - AI agents reference prior decisions
-6. **Use pre-release workflow** - Test builds before production releases
+## 🤖 AI-Powered Development
 
-## 🎓 Learning Path
+This project includes 6 specialized AI agents for VS Code:
 
-### For Beginners
-1. Read [GETTING_STARTED.md](GETTING_STARTED.md)
-2. Follow the customization checklist
-3. Ask `@flutter-developer` questions as you learn
-4. Start with simple features
+| Agent | Purpose |
+|-------|---------|
+| **@product-owner** | Define features & requirements |
+| **@experience-designer** | Design UX & user flows |
+| **@architect** | Plan technical architecture |
+| **@researcher** | Find packages & best practices |
+| **@flutter-developer** | Implement features & fix bugs |
+| **@doc-writer** | Write documentation |
 
-### For Intermediate Developers
-1. Review [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md) 
-2. Set up CI/CD workflows
-3. Use AI agents to accelerate development
-4. Implement advanced features with @architect guidance
+## Troubleshooting
 
-### For Teams
-1. Review [AGENTS.md](AGENTS.md) for agent roles
-2. Set up shared documentation in docs/
-3. Use @product-owner for requirement alignment
-4. Leverage @doc-writer for team documentation
+### App not opening on device
 
-## Resources
+1. **Check Flutter installation**: `flutter doctor -v`
+2. **Verify Android SDK**: Ensure API level 21+ is installed
+3. **Check device connection**: `flutter devices`
+4. **Enable USB debugging** on your Android device
+5. **Run in verbose mode**: `flutter run -v`
 
-- [Flutter Documentation](https://docs.flutter.dev/)
-- [Dart Language](https://dart.dev/)
-- [Flutter Packages](https://pub.dev/)
+### Location not working
+
+1. **Grant location permissions** when prompted
+2. **Enable location services** on the device
+3. **Check GPS availability**: Some emulators need location simulation
+
+### Build failures
+
+1. **Clean and rebuild**: `flutter clean && flutter pub get && flutter build apk`
+2. **Check Java version**: Must be Java 17+
+3. **Update Gradle**: Check `android/gradle/wrapper/gradle-wrapper.properties`
 
 ## License
 

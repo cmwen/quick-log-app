@@ -98,7 +98,6 @@ The release APK is typically 40-60% smaller thanks to Flutter's automatic tree-s
 1. `.github/workflows/build.yml` - PR/push validation with parallel tests
 2. `.github/workflows/release.yml` - Tag-triggered release builds
 3. `.github/workflows/pre-release.yml` - Manual beta/alpha releases
-4. `.github/workflows/deploy-website.yml` - Astro documentation deployment
 
 ## Best Practices Applied
 

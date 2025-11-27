@@ -1,6 +1,6 @@
-# App Customization Guide
+# App Customization Guide (Android)
 
-This guide provides a comprehensive checklist and AI prompts for customizing this Flutter template for your specific app.
+This guide provides a comprehensive checklist and AI prompts for customizing the Quick Log app for your specific needs.
 
 ## 📝 Complete Customization Checklist
 
@@ -10,36 +10,29 @@ This guide provides a comprehensive checklist and AI prompts for customizing thi
   - [ ] `pubspec.yaml` - name field
   - [ ] `lib/main.dart` - MaterialApp title
   - [ ] `android/app/src/main/AndroidManifest.xml` - android:label
-  - [ ] `web/manifest.json` - name and short_name
-  - [ ] `ios/Runner/Info.plist` - CFBundleName
-  - [ ] `macos/Runner/Info.plist` - CFBundleName
 
-- [ ] **Package/Bundle Identifier**
+- [ ] **Package Identifier**
   - [ ] `android/app/build.gradle.kts` - namespace and applicationId
-  - [ ] iOS: Xcode → Runner → General → Bundle Identifier
-  - [ ] macOS: Xcode → Runner → General → Bundle Identifier
   
 - [ ] **Description**
   - [ ] `pubspec.yaml` - description field
   - [ ] `README.md` - project description
-  - [ ] `web/manifest.json` - description field
 
 ### Phase 2: Visual Identity
 
 - [ ] **App Icon**
   - [ ] Create 1024×1024 master icon
-  - [ ] Generate platform-specific icons
   - [ ] Android: `android/app/src/main/res/mipmap-*`
-  - [ ] iOS: `ios/Runner/Assets.xcassets/AppIcon.appiconset`
-  - [ ] Web: `web/icons/` (192px, 512px)
-  - [ ] macOS: `macos/Runner/Assets.xcassets/AppIcon.appiconset`
-  - [ ] Web favicon: `web/favicon.png`
+    - mdpi: 48×48
+    - hdpi: 72×72
+    - xhdpi: 96×96
+    - xxhdpi: 144×144
+    - xxxhdpi: 192×192
 
 - [ ] **Color Theme**
   - [ ] `lib/main.dart` - MaterialApp theme
   - [ ] Primary color (seedColor)
-  - [ ] Consider dark mode theme
-  - [ ] `web/manifest.json` - theme_color and background_color
+  - [ ] Dark mode theme
 
 - [ ] **Splash Screen** (Optional)
   - [ ] Use flutter_native_splash package
@@ -50,7 +43,6 @@ This guide provides a comprehensive checklist and AI prompts for customizing thi
 - [ ] **Repository Setup**
   - [ ] GitHub repository URL
   - [ ] Update git remote
-  - [ ] `astro/astro.config.mjs` - GITHUB_USERNAME and REPO_NAME
   - [ ] README.md - repository links
 
 - [ ] **GitHub Secrets** (for CI/CD)
@@ -77,21 +69,20 @@ This guide provides a comprehensive checklist and AI prompts for customizing thi
   - [ ] Navigation structure
 
 - [ ] **Technical Architecture**
-  - [ ] Choose state management (Provider, Riverpod, Bloc, GetX)
-  - [ ] Plan data persistence (shared_preferences, sqflite, hive, isar)
+  - [ ] State management (Provider, Riverpod, Bloc)
+  - [ ] Data persistence (sqflite, hive, isar)
   - [ ] API integration architecture
-  - [ ] Authentication strategy
 
 ## 🤖 AI Prompts for Customization
 
 ### Step 1: Rename App
 
 ```
-@flutter-developer Please rename this Flutter app:
-- Current name: "min_flutter_template"
-- New name: "my_awesome_app"
-- Current package: "com.cmwen.min_flutter_template"
-- New package: "com.mycompany.my_awesome_app"
+@flutter-developer Please rename this Flutter Android app:
+- Current name: "quick_log_app"
+- New name: "my_app_name"
+- Current package: "com.cmwen.quick_log_app"
+- New package: "com.mycompany.my_app"
 
 Update all necessary files including:
 - pubspec.yaml
@@ -99,9 +90,6 @@ Update all necessary files including:
 - test/widget_test.dart (imports)
 - android/app/build.gradle.kts (namespace and applicationId)
 - android/app/src/main/AndroidManifest.xml (label)
-- web/manifest.json (name and short_name)
-- iOS bundle identifier (provide instructions for Xcode)
-- macOS bundle identifier (provide instructions for Xcode)
 
 After updating, run `flutter pub get` and verify everything compiles.
 ```
@@ -117,17 +105,14 @@ Requirements:
 - App concept: [DESCRIBE YOUR APP]
 - Style: [flat/gradient/minimal/modern]
 - Primary color: #[HEX CODE]
-- Secondary color: #[HEX CODE]
 - Symbol/concept: [DESCRIBE ICON CONCEPT]
-- Background: [transparent/solid color]
 
 Please provide:
 1. A 1024×1024 PNG master icon
-2. Instructions for using flutter_launcher_icons package
+2. Instructions for using flutter_launcher_icons package for Android
 3. Alt text for accessibility
 
-Save the master icon to `assets/icon/app_icon.png` and help me set up 
-flutter_launcher_icons in pubspec.yaml.
+Save the master icon to `assets/icon/app_icon.png`.
 ```
 
 ### Step 3: Customize Theme
@@ -139,122 +124,14 @@ Brand colors:
 - Primary: #[HEX] ([COLOR NAME])
 - Secondary: #[HEX] ([COLOR NAME])
 - Background: #[HEX]
-- Surface: #[HEX]
-- Error: #[HEX]
 
 Requirements:
 - Use Material Design 3
 - Support dark mode
-- Ensure WCAG AA contrast ratios
 - Use ColorScheme.fromSeed for consistency
-
-Also update web/manifest.json with matching theme_color and background_color.
 ```
 
-### Step 4: Define Product Requirements
-
-```
-@product-owner I want to build a [TYPE OF APP] with the following capabilities:
-
-Core features:
-1. [FEATURE 1]
-2. [FEATURE 2]
-3. [FEATURE 3]
-
-Target users:
-- [USER PERSONA 1]
-- [USER PERSONA 2]
-
-Key user goals:
-- [GOAL 1]
-- [GOAL 2]
-
-Success metrics:
-- [METRIC 1]
-- [METRIC 2]
-
-Please create:
-1. Detailed user stories with acceptance criteria
-2. Feature prioritization (MVP vs future)
-3. Non-functional requirements
-4. Success metrics and KPIs
-
-Save requirements to docs/REQUIREMENTS.md
-```
-
-### Step 5: Design User Experience
-
-```
-@experience-designer Based on the product requirements in docs/REQUIREMENTS.md, 
-please design:
-
-1. Information architecture (screen hierarchy)
-2. Navigation structure (tab bar, drawer, or stack-based)
-3. User flows for key features:
-   - [FLOW 1]
-   - [FLOW 2]
-   - [FLOW 3]
-4. Wireframes for main screens
-5. Accessibility considerations
-
-Constraints:
-- Platform: [Android/iOS/Web/All]
-- Target devices: [Mobile/Tablet/Desktop]
-- Material Design 3 components
-
-Save design to docs/UX_DESIGN.md with ASCII wireframes or descriptions.
-```
-
-### Step 6: Research Dependencies
-
-```
-@researcher I need to find the best Flutter packages for:
-
-1. State Management - [brief description of needs]
-2. Local Database - [data structure and requirements]
-3. HTTP Client - [API integration needs]
-4. [OTHER CATEGORY] - [requirements]
-
-For each category, please:
-- Recommend top 3 packages with pros/cons
-- Check latest version and maintenance status
-- Verify compatibility with Flutter 3.10+
-- Consider package size and performance
-- Check license compatibility
-
-Save findings to docs/DEPENDENCIES_RESEARCH.md
-```
-
-### Step 7: Plan Architecture
-
-```
-@architect Based on the requirements and dependencies research, please design:
-
-Project structure:
-- Folder organization (screens, widgets, models, services, providers)
-- State management pattern
-- Data layer architecture
-- API integration approach
-- Navigation structure
-
-Technical decisions:
-- State management: [Provider/Riverpod/Bloc/GetX]
-- Local storage: [shared_preferences/sqflite/hive/isar]
-- HTTP client: [dio/http/chopper]
-- Dependency injection approach
-- Error handling strategy
-- Logging approach
-
-Provide:
-1. Directory structure with purpose of each folder
-2. Data flow diagram
-3. Key architectural patterns to follow
-4. Code organization guidelines
-
-Save to docs/ARCHITECTURE.md
-```
-
-### Step 8: Implement First Feature
+### Step 4: Add New Feature
 
 ```
 @flutter-developer Implement [FEATURE NAME] feature:
@@ -264,60 +141,16 @@ Requirements:
 - [REQUIREMENT 2]
 - [REQUIREMENT 3]
 
-Acceptance criteria:
-- [CRITERION 1]
-- [CRITERION 2]
-
 Technical approach:
-- Follow architecture in docs/ARCHITECTURE.md
-- Create necessary models in lib/models/
+- Create models in lib/models/
 - Implement UI in lib/screens/[feature_name]/
-- Use widgets from lib/widgets/ for reusable components
-- Implement business logic in lib/services/
-- Add state management with [chosen solution]
+- Add database operations in lib/data/database_helper.dart
 
 After implementation:
-1. Write unit tests for business logic
-2. Write widget tests for UI components
-3. Run `dart format .`
-4. Run `flutter analyze`
-5. Run `flutter test`
-6. Document any public APIs
-```
-
-### Step 9: Set Up GitHub Repository
-
-```
-@terminal Please help me set up my GitHub repository:
-
-1. Create repository on GitHub: [REPO_URL]
-2. Update git remote:
-   ```
-   git remote set-url origin [REPO_URL]
-   ```
-3. Update astro/astro.config.mjs with correct username and repo name
-4. Create initial commit with customizations
-5. Push to main branch
-
-Then guide me through setting up GitHub Secrets for signed releases.
-```
-
-### Step 10: Create Release Build
-
-```
-@flutter-developer Please help me create the first release build:
-
-1. Verify all customizations are complete
-2. Update version in pubspec.yaml to 1.0.0+1
-3. Build release artifacts:
-   - Android: APK and AAB
-   - iOS: IPA (if on macOS)
-   - Web: production build
-4. Test release build on device
-5. Create git tag v1.0.0
-6. Push tag to trigger release workflow
-
-Provide step-by-step commands.
+1. Write unit tests
+2. Run `dart format .`
+3. Run `flutter analyze`
+4. Run `flutter test`
 ```
 
 ## 🔍 Verification Checklist
@@ -337,31 +170,24 @@ dart format --set-exit-if-changed .
 # Run tests
 flutter test
 
-# Build all platforms
+# Build Android
 flutter build apk --release
-flutter build web --release
-flutter build macos  # if on macOS
+flutter build appbundle --release
 ```
 
 ### Visual Verification
-- [ ] App icon shows correctly on all platforms
-- [ ] App name displays correctly everywhere
+- [ ] App icon shows correctly in launcher
+- [ ] App name displays correctly in app drawer
 - [ ] Theme colors match brand
-- [ ] Splash screen works (if implemented)
-- [ ] Dark mode works correctly (if implemented)
+- [ ] Dark mode works correctly
 
 ### Functional Verification
 - [ ] App launches without errors
 - [ ] Navigation works correctly
-- [ ] Core features work as expected
-- [ ] No placeholder content from template
+- [ ] Location permissions prompt works
+- [ ] Tags can be created and selected
+- [ ] Entries are saved correctly
 - [ ] All imports reference correct package name
-
-### Documentation Verification
-- [ ] README.md updated with app-specific info
-- [ ] docs/ folder contains requirements, architecture, design docs
-- [ ] GitHub repository configured
-- [ ] CI/CD workflows tested
 
 ## 📦 Recommended Dependencies
 
@@ -369,56 +195,29 @@ flutter build macos  # if on macOS
 ```yaml
 dependencies:
   # State Management
-  provider: ^6.1.1              # Simple, official
-  # OR riverpod: ^2.4.9         # More powerful
-  # OR flutter_bloc: ^8.1.3     # BLoC pattern
-  
-  # HTTP Client
-  dio: ^5.4.0                   # Feature-rich HTTP client
+  provider: ^6.1.1              # Already included
   
   # Local Storage
-  shared_preferences: ^2.2.2    # Simple key-value
-  # OR hive: ^2.2.3             # Fast NoSQL
-  # OR isar: ^3.1.0             # Advanced database
+  sqflite: ^2.3.0               # Already included
+  path_provider: ^2.1.1         # Already included
   
-  # Navigation
-  go_router: ^13.0.0            # Declarative routing
+  # Location
+  geolocator: ^10.1.0           # Already included
+  geocoding: ^2.1.1             # Already included
   
-  # JSON Serialization
-  json_annotation: ^4.8.1
-  
-  # Forms & Validation
-  flutter_form_builder: ^9.1.1
+  # Date/Time
+  intl: ^0.19.0                 # Already included
   
   # UI Components
-  flutter_svg: ^2.0.9           # SVG support
-  cached_network_image: ^3.3.0  # Image caching
-  
-  # Utilities
-  intl: ^0.19.0                 # Internationalization
-  url_launcher: ^6.2.2          # Open URLs
+  flutter_chips_input: ^2.0.0   # Already included
   
 dev_dependencies:
-  # Code Generation
-  build_runner: ^2.4.7
-  json_serializable: ^6.7.1
-  
   # Icons
   flutter_launcher_icons: ^0.13.1
   
   # Testing
   mockito: ^5.4.4
-  integration_test:
-    sdk: flutter
 ```
-
-## 🎓 Learning Resources
-
-- **Flutter Documentation**: https://docs.flutter.dev
-- **Dart Language**: https://dart.dev
-- **Material Design 3**: https://m3.material.io
-- **Flutter Packages**: https://pub.dev
-- **Flutter Community**: https://flutter.dev/community
 
 ## 💡 Best Practices
 
@@ -427,18 +226,14 @@ dev_dependencies:
 3. **Use AI agents** - Let them handle boilerplate and research
 4. **Document decisions** - Save to docs/ folder for future reference
 5. **Follow conventions** - Use Flutter/Dart style guides
-6. **Version control** - Commit frequently with clear messages
-7. **Build often** - Test on real devices regularly
-8. **Accessibility first** - Design for all users from the start
+6. **Build often** - Test on real Android devices regularly
+7. **Accessibility first** - Design for all users from the start
 
 ## 🚀 Ready to Build!
 
 Once you've completed these customizations, you'll have:
 - ✅ Fully branded app with custom name and icon
-- ✅ Clear product requirements and user stories
-- ✅ Designed user experience and flows
-- ✅ Well-planned architecture
-- ✅ Configured CI/CD pipeline
+- ✅ Configured CI/CD pipeline for Android
 - ✅ Ready-to-use development environment
 
 **Start building your features with the AI agents!**

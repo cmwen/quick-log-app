@@ -1,4 +1,4 @@
-name: Flutter Pre-Release & Beta
+name: Flutter Pre-Release & Beta (Android)
 
 on:
   workflow_dispatch:
@@ -97,28 +97,18 @@ jobs:
     - name: Build signed App Bundle
       run: flutter build appbundle --release
     
-    - name: Build Web
-      run: flutter build web --release
-    
-    - name: Create Web Archive
-      run: |
-        cd build/web
-        zip -r ../../web-${{ inputs.version_name }}.zip .
-        cd ../..
-    
     # Rename artifacts with version suffix
     - name: Rename artifacts
       run: |
         VERSION="${{ inputs.version_name }}"
         RELEASE_TYPE="${{ inputs.release_type }}"
-        APP_NAME="min-flutter-template"
+        APP_NAME="quick-log-app"
         
         mkdir -p build/artifacts
         cp build/app/outputs/flutter-apk/app-release.apk \
            build/artifacts/${APP_NAME}-${VERSION}-${RELEASE_TYPE}.apk
         cp build/app/outputs/bundle/release/app-release.aab \
            build/artifacts/${APP_NAME}-${VERSION}-${RELEASE_TYPE}.aab
-        cp web-${VERSION}.zip build/artifacts/
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v5
@@ -150,7 +140,6 @@ jobs:
           ### 📦 Downloads
           - **APK**: Universal Android package (all architectures)
           - **AAB**: Android App Bundle (for Play Store internal testing)
-          - **Web**: Web application build
           
           ### 🧪 Testing Instructions
           1. Download the APK file
