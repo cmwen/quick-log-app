@@ -1,0 +1,168 @@
+name: Flutter Pre-Release & Beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - pre-release
+          - beta
+          - alpha
+        default: 'beta'
+      version_name:
+        description: 'Version name (e.g., 1.0.0-beta.1)'
+        required: true
+        type: string
+      create_release:
+        description: 'Create GitHub Release'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  pre-release:
+    name: Build & Release ${{ inputs.release_type }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+    
+    # Use CI-optimized Gradle properties
+    - name: Setup Gradle for CI
+      run: cp android/gradle-ci.properties android/gradle.properties
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.3'
+        channel: 'stable'
+        cache: true
+    
+    # Cache pub dependencies for faster builds
+    - name: Cache Flutter packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ github.workspace }}/.dart_tool
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+    
+    - name: Get dependencies
+      run: flutter pub get
+    
+    - name: Run tests
+      run: flutter test --concurrency=$(nproc)
+    
+    - name: Decode Android keystore
+      if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      run: |
+        echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release-keystore.jks
+    
+    - name: Create key.properties
+      if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      run: |
+        cat > android/key.properties << EOF
+        storePassword=$ANDROID_KEYSTORE_PASSWORD
+        keyPassword=$ANDROID_KEY_PASSWORD
+        keyAlias=$ANDROID_KEY_ALIAS
+        storeFile=release-keystore.jks
+        EOF
+    
+    - name: Build signed APK
+      run: flutter build apk --release
+    
+    - name: Build signed App Bundle
+      run: flutter build appbundle --release
+    
+    - name: Build Web
+      run: flutter build web --release
+    
+    - name: Create Web Archive
+      run: |
+        cd build/web
+        zip -r ../../web-${{ inputs.version_name }}.zip .
+        cd ../..
+    
+    # Rename artifacts with version suffix
+    - name: Rename artifacts
+      run: |
+        VERSION="${{ inputs.version_name }}"
+        RELEASE_TYPE="${{ inputs.release_type }}"
+        APP_NAME="min-flutter-template"
+        
+        mkdir -p build/artifacts
+        cp build/app/outputs/flutter-apk/app-release.apk \
+           build/artifacts/${APP_NAME}-${VERSION}-${RELEASE_TYPE}.apk
+        cp build/app/outputs/bundle/release/app-release.aab \
+           build/artifacts/${APP_NAME}-${VERSION}-${RELEASE_TYPE}.aab
+        cp web-${VERSION}.zip build/artifacts/
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.release_type }}-${{ inputs.version_name }}
+        path: build/artifacts/*
+        retention-days: 90
+    
+    - name: Create GitHub Release
+      if: ${{ inputs.create_release }}
+      uses: softprops/action-gh-release@v2
+      with:
+        name: ${{ inputs.version_name }}
+        tag_name: ${{ inputs.version_name }}
+        prerelease: true
+        draft: false
+        files: build/artifacts/*
+        body: |
+          ## 🧪 ${{ inputs.release_type == 'pre-release' && 'Pre-Release' || inputs.release_type == 'beta' && 'Beta Release' || 'Alpha Release' }}
+          
+          This is a ${{ inputs.release_type }} build for testing purposes.
+          
+          **Version:** ${{ inputs.version_name }}
+          **Build Type:** ${{ inputs.release_type }}
+          
+          ### ⚠️ Warning
+          This build may contain experimental features and bugs. Not recommended for production use.
+          
+          ### 📦 Downloads
+          - **APK**: Universal Android package (all architectures)
+          - **AAB**: Android App Bundle (for Play Store internal testing)
+          - **Web**: Web application build
+          
+          ### 🧪 Testing Instructions
+          1. Download the APK file
+          2. Enable "Install from unknown sources" on your Android device
+          3. Install the APK
+          4. Report any issues on GitHub
+          
+          ---
+          *Built from commit: ${{ github.sha }}*
+    
+    - name: Clean up signing files
+      if: always()
+      run: |
+        rm -f android/app/release-keystore.jks
+        rm -f android/key.properties
