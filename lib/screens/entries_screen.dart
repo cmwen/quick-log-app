@@ -363,15 +363,16 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Delete Entry'),
-                    content:
-                        const Text('Are you sure you want to delete this entry?'),
+                    content: const Text(
+                        'Are you sure you want to delete this entry?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style:
+                            TextButton.styleFrom(foregroundColor: Colors.red),
                         onPressed: () => Navigator.pop(context, true),
                         child: const Text('Delete'),
                       ),
@@ -423,7 +424,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4),
-                    Text(DateFormat('MMM d, y • h:mm a').format(entry.createdAt)),
+                    Text(DateFormat('MMM d, y • h:mm a')
+                        .format(entry.createdAt)),
                     if (entry.note != null && entry.note!.isNotEmpty)
                       Text(
                         entry.note!,

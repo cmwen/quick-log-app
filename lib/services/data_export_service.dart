@@ -58,13 +58,11 @@ class DataExportService {
     final buffer = StringBuffer();
 
     // CSV header
-    buffer.writeln(
-        'ID,Created At,Tags,Note,Latitude,Longitude,Location Label');
+    buffer.writeln('ID,Created At,Tags,Note,Latitude,Longitude,Location Label');
 
     // CSV data rows
     for (var entry in entries) {
-      final tagLabels =
-          entry.tags.map((id) => tagMap[id] ?? id).join('; ');
+      final tagLabels = entry.tags.map((id) => tagMap[id] ?? id).join('; ');
       final note = entry.note?.replaceAll('"', '""') ?? '';
       final locationLabel = entry.locationLabel?.replaceAll('"', '""') ?? '';
 
