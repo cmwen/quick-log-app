@@ -131,21 +131,28 @@ class DataExportService {
       int tagsImported = 0;
       int entriesImported = 0;
 
-      // Import tags
+      // Import tags - only add new tags, preserve existing ones
       if (data['tags'] != null) {
         final tagsData = data['tags'] as List<dynamic>;
+        final existingTags = await DatabaseHelper.instance.getAllTags();
+        final existingTagIds = existingTags.map((t) => t.id).toSet();
+
         for (var tagData in tagsData) {
-          final tag = LogTag(
-            id: tagData['id'] as String,
-            label: tagData['label'] as String,
-            category: TagCategory.values.firstWhere(
-              (e) => e.name == tagData['category'],
-              orElse: () => TagCategory.custom,
-            ),
-            usageCount: tagData['usageCount'] as int? ?? 0,
-          );
-          await DatabaseHelper.instance.insertTag(tag);
-          tagsImported++;
+          final tagId = tagData['id'] as String;
+          // Only import tags that don't already exist to preserve usage counts
+          if (!existingTagIds.contains(tagId)) {
+            final tag = LogTag(
+              id: tagId,
+              label: tagData['label'] as String,
+              category: TagCategory.values.firstWhere(
+                (e) => e.name == tagData['category'],
+                orElse: () => TagCategory.custom,
+              ),
+              usageCount: tagData['usageCount'] as int? ?? 0,
+            );
+            await DatabaseHelper.instance.insertTag(tag);
+            tagsImported++;
+          }
         }
       }
 

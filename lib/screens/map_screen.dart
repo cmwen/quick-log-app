@@ -200,7 +200,14 @@ class _MapScreenState extends State<MapScreen> {
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.quicklog.app',
+            userAgentPackageName: 'com.cmwen.quick_log_app',
+          ),
+          const RichAttributionWidget(
+            attributions: [
+              TextSourceAttribution(
+                'OpenStreetMap contributors',
+              ),
+            ],
           ),
           MarkerLayer(
             markers: _entriesWithLocation.map((entry) {

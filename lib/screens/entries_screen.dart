@@ -156,7 +156,17 @@ class _EntriesScreenState extends State<EntriesScreen> {
       ),
     );
 
-    if (result == true && selectedTags.isNotEmpty) {
+    if (result == true) {
+      if (selectedTags.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please select at least one tag'),
+            ),
+          );
+        }
+        return;
+      }
       try {
         final updatedEntry = entry.copyWith(
           note: noteController.text.isEmpty ? null : noteController.text,
