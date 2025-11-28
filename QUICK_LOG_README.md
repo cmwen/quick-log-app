@@ -13,12 +13,29 @@ A tag-first logging Android application for quick note-taking with automatic loc
 - **Smart Tag System** - Pre-populated tags across 5 categories (Activity, Location, Mood, People, Custom)
 - **Automatic Location Tracking** - GPS coordinates and geocoded address capture
 - **Quick Entry Creation** - Minimal friction for fast logging
-- **Entry Management** - View, filter, and delete past entries
+- **Entry Management** - View, filter, and delete past entries with swipe actions
 - **Tag Management** - Add custom tags and view usage statistics
+
+### Map & Location
+- **Map View** - Interactive OpenStreetMap showing all logged locations
+- **Location Markers** - Tap markers to view entry details
+- **Automatic Location** - GPS capture with reverse geocoding
+
+### Data Management
+- **Export to JSON** - Full data export in LLM-friendly format
+- **Export to CSV** - Spreadsheet-compatible export
+- **Import from JSON** - Restore entries from backup
+- **Share Data** - Share exports via system share sheet
+
+### Settings & Customization
+- **Theme Selection** - Choose System, Light, or Dark theme
+- **Persistent Settings** - Preferences saved across sessions
+- **Custom App Icon** - Blue-themed branded icon
 
 ### User Experience
 - **Material Design 3** - Modern, beautiful UI
-- **Dark Mode** - Automatic theme switching based on system preferences
+- **Dark Mode** - Theme switching based on preference or system
+- **Swipe Actions** - Swipe left to delete, right to edit entries
 - **Offline First** - All data stored locally with SQLite
 - **No Login Required** - Privacy-focused, local-only storage
 - **Fast & Lightweight** - Optimized performance
@@ -91,7 +108,39 @@ flutter build appbundle --release
 1. Navigate to the **Entries** tab
 2. Tap any entry to view full details
 3. Pull down to refresh the list
-4. Tap the more icon to delete an entry
+4. **Swipe left** on an entry to delete it
+5. **Swipe right** on an entry to edit it
+
+### Using the Map View
+
+1. Navigate to the **Map** tab (or tap the map icon)
+2. View all logged locations as markers on the map
+3. Tap a marker to see entry details in a popup
+4. Use pinch gestures to zoom in/out
+
+### Exporting Data
+
+1. Navigate to the **Settings** tab
+2. Choose export format:
+   - **Export JSON** - Complete data backup (recommended for restore)
+   - **Export CSV** - Spreadsheet-compatible format
+3. Use the share sheet to save or send the file
+
+### Importing Data
+
+1. Navigate to the **Settings** tab
+2. Tap **Import JSON**
+3. Select a previously exported JSON file
+4. Entries will be merged with existing data
+
+### Changing Theme
+
+1. Navigate to the **Settings** tab
+2. Under **Theme**, select:
+   - **System** - Follow device dark/light mode
+   - **Light** - Always use light theme
+   - **Dark** - Always use dark theme
+3. Changes apply immediately and persist
 
 ## 🏗️ Architecture
 
@@ -101,6 +150,9 @@ flutter build appbundle --release
 - **Language**: Dart 3.10.1+
 - **Database**: SQLite (sqflite)
 - **Location**: Geolocator + Geocoding
+- **Maps**: flutter_map with OpenStreetMap
+- **Export/Import**: share_plus, file_picker
+- **Settings**: shared_preferences
 - **State Management**: StatefulWidget (can be upgraded to Provider/Riverpod)
 - **UI**: Material Design 3
 
@@ -114,10 +166,16 @@ lib/
 ├── models/
 │   ├── log_entry.dart        # Entry data model
 │   └── log_tag.dart          # Tag data model & categories
+├── providers/
+│   └── theme_provider.dart   # Theme state management
 ├── screens/
 │   ├── main_screen.dart      # Entry creation screen
-│   ├── entries_screen.dart   # Entry list & details
-│   └── tags_screen.dart      # Tag management
+│   ├── entries_screen.dart   # Entry list with swipe actions
+│   ├── tags_screen.dart      # Tag management
+│   ├── map_screen.dart       # Map view with markers
+│   └── settings_screen.dart  # Theme & export settings
+├── services/
+│   └── export_service.dart   # JSON/CSV export logic
 └── widgets/
     └── tag_chip.dart         # Reusable tag chip widget
 ```
@@ -168,24 +226,31 @@ lib/
 
 ## 🛣️ Roadmap
 
-### Phase 1 (Current) ✅
+### Phase 1 ✅ Complete
 - [x] Core entry creation with tags
 - [x] Location tracking
 - [x] Entry management
 - [x] Tag management
 - [x] Material Design 3 UI
 
-### Phase 2 (Planned)
-- [ ] Map visualization of logged locations
-- [ ] Export to JSON/CSV
+### Phase 2 ✅ Complete
+- [x] Custom app icon (blue theme)
+- [x] Map visualization of logged locations
+- [x] Export to JSON/CSV
+- [x] Import from JSON
+- [x] Settings screen with theme selection
+- [x] Swipe actions (edit/delete entries)
+
+### Phase 3 (Planned)
 - [ ] Search and advanced filtering
 - [ ] Statistics and insights
-- [ ] Custom app icon
-
-### Phase 3 (Future)
 - [ ] Tag relationship suggestions
-- [ ] Data backup/restore
+- [ ] Date range filtering
+
+### Phase 4 (Future)
+- [ ] Data backup/restore to cloud
 - [ ] Widgets for quick logging
+- [ ] Custom color themes
 
 ## 🤝 Contributing
 
@@ -209,8 +274,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
   - sqflite - SQLite database
   - geolocator - Location services
   - geocoding - Reverse geocoding
+  - flutter_map - OpenStreetMap integration
+  - latlong2 - Coordinate handling
+  - share_plus - Share functionality
+  - file_picker - File selection
+  - shared_preferences - Settings persistence
   - intl - Date formatting
   - provider - State management
+  - flutter_launcher_icons - App icon generation
 
 ## 📞 Support
 
@@ -221,7 +292,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📊 Status
 
 - **Version**: 1.0.0+1
-- **Status**: Beta - Core features complete
+- **Status**: Release - All planned features complete
 - **Platform**: Android ✅
 
 ---

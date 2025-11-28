@@ -4,6 +4,8 @@ import 'package:quick_log_app/models/log_tag.dart';
 import 'package:quick_log_app/data/database_helper.dart';
 import 'package:quick_log_app/screens/entries_screen.dart';
 import 'package:quick_log_app/screens/tags_screen.dart';
+import 'package:quick_log_app/screens/map_screen.dart';
+import 'package:quick_log_app/screens/settings_screen.dart';
 import 'package:quick_log_app/widgets/tag_chip.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -344,6 +346,26 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: const Text('Quick Log'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MapScreen()),
+              );
+            },
+            tooltip: 'Map View',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+            tooltip: 'Settings',
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () {

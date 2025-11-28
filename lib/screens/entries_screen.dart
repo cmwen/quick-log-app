@@ -14,6 +14,7 @@ class EntriesScreen extends StatefulWidget {
 class _EntriesScreenState extends State<EntriesScreen> {
   List<LogEntry> _entries = [];
   Map<String, LogTag> _tagMap = {};
+  List<LogTag> _allTags = [];
   bool _isLoading = true;
 
   @override
@@ -32,6 +33,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
       setState(() {
         _entries = entries;
         _tagMap = tagMap;
+        _allTags = tags;
         _isLoading = false;
       });
     } catch (e) {
@@ -44,27 +46,31 @@ class _EntriesScreenState extends State<EntriesScreen> {
     }
   }
 
-  Future<void> _deleteEntry(LogEntry entry) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Entry'),
-        content: const Text('Are you sure you want to delete this entry?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _deleteEntry(LogEntry entry, {bool confirm = true}) async {
+    if (confirm) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Entry'),
+          content: const Text('Are you sure you want to delete this entry?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
 
-    if (confirmed == true && entry.id != null) {
+      if (confirmed != true) return;
+    }
+
+    if (entry.id != null) {
       try {
         await DatabaseHelper.instance.deleteEntry(entry.id!);
         await _loadData();
@@ -78,6 +84,96 @@ class _EntriesScreenState extends State<EntriesScreen> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text('Error deleting entry: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _editEntry(LogEntry entry) async {
+    final TextEditingController noteController =
+        TextEditingController(text: entry.note ?? '');
+    final Set<String> selectedTags = Set.from(entry.tags);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Edit Entry'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tags',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _allTags.map((tag) {
+                    final isSelected = selectedTags.contains(tag.id);
+                    return FilterChip(
+                      label: Text(tag.label),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            selectedTags.add(tag.id);
+                          } else {
+                            selectedTags.remove(tag.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Note',
+                    hintText: 'Add a note...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true && selectedTags.isNotEmpty) {
+      try {
+        final updatedEntry = entry.copyWith(
+          note: noteController.text.isEmpty ? null : noteController.text,
+          tags: selectedTags.toList(),
+        );
+        await DatabaseHelper.instance.updateEntry(updatedEntry);
+        await _loadData();
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Entry updated')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error updating entry: $e')));
         }
       }
     }
@@ -218,71 +314,134 @@ class _EntriesScreenState extends State<EntriesScreen> {
         itemCount: _entries.length,
         itemBuilder: (context, index) {
           final entry = _entries[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                child: Text(DateFormat('d').format(entry.createdAt)),
+          return Dismissible(
+            key: Key('entry_${entry.id}'),
+            background: Container(
+              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(12),
               ),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Wrap(
-                      spacing: 4,
-                      children: entry.tags.take(3).map((tagId) {
-                        final tag = _tagMap[tagId];
-                        return Chip(
-                          label: Text(
-                            tag?.label ?? tagId,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          visualDensity: VisualDensity.compact,
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  if (entry.tags.length > 3)
-                    Chip(
-                      label: Text(
-                        '+${entry.tags.length - 3}',
-                        style: const TextStyle(fontSize: 12),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 20),
+              child: const Icon(
+                Icons.edit,
+                color: Colors.white,
+              ),
+            ),
+            secondaryBackground: Container(
+              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: const Icon(
+                Icons.delete,
+                color: Colors.white,
+              ),
+            ),
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                // Swipe right - Edit
+                await _editEntry(entry);
+                return false; // Don't dismiss, just edit
+              } else {
+                // Swipe left - Delete
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Entry'),
+                    content:
+                        const Text('Are you sure you want to delete this entry?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
                       ),
-                      visualDensity: VisualDensity.compact,
+                      TextButton(
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                return confirmed == true;
+              }
+            },
+            onDismissed: (direction) {
+              if (direction == DismissDirection.endToStart) {
+                _deleteEntry(entry, confirm: false);
+              }
+            },
+            child: Card(
+              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Text(DateFormat('d').format(entry.createdAt)),
+                ),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Wrap(
+                        spacing: 4,
+                        children: entry.tags.take(3).map((tagId) {
+                          final tag = _tagMap[tagId];
+                          return Chip(
+                            label: Text(
+                              tag?.label ?? tagId,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          );
+                        }).toList(),
+                      ),
                     ),
-                ],
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(DateFormat('MMM d, y • h:mm a').format(entry.createdAt)),
-                  if (entry.note != null && entry.note!.isNotEmpty)
-                    Text(
-                      entry.note!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  if (entry.locationLabel != null)
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 12),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            entry.locationLabel!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    if (entry.tags.length > 3)
+                      Chip(
+                        label: Text(
+                          '+${entry.tags.length - 3}',
+                          style: const TextStyle(fontSize: 12),
                         ),
-                      ],
-                    ),
-                ],
-              ),
-              isThreeLine: true,
-              onTap: () => _showEntryDetails(entry),
-              trailing: IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () => _showEntryDetails(entry),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    Text(DateFormat('MMM d, y • h:mm a').format(entry.createdAt)),
+                    if (entry.note != null && entry.note!.isNotEmpty)
+                      Text(
+                        entry.note!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (entry.locationLabel != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 12),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              entry.locationLabel!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                isThreeLine: true,
+                onTap: () => _showEntryDetails(entry),
+                trailing: IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () => _showEntryDetails(entry),
+                ),
               ),
             ),
           );

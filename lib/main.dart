@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/screens/main_screen.dart';
 
 void main() {
-  runApp(const QuickLogApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const QuickLogApp(),
+    ),
+  );
 }
 
 /// Quick Log - A tag-first logging application
@@ -11,6 +18,8 @@ class QuickLogApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       title: 'Quick Log',
       theme: ThemeData(
@@ -27,7 +36,7 @@ class QuickLogApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
+      themeMode: themeProvider.themeMode,
       home: const MainScreen(),
       debugShowCheckedModeBanner: false,
     );
