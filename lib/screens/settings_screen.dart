@@ -53,22 +53,24 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Choose Theme'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ThemeMode.values.map((mode) {
-            return RadioListTile<ThemeMode>(
-              title: Text(_getThemeModeLabel(mode)),
-              subtitle: Text(_getThemeModeDescription(mode)),
-              value: mode,
-              groupValue: themeProvider.themeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  themeProvider.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            );
-          }).toList(),
+        content: RadioGroup<ThemeMode>(
+          groupValue: themeProvider.themeMode,
+          onChanged: (value) {
+            if (value != null) {
+              themeProvider.setThemeMode(value);
+              Navigator.pop(context);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ThemeMode.values.map((mode) {
+              return RadioListTile<ThemeMode>(
+                title: Text(_getThemeModeLabel(mode)),
+                subtitle: Text(_getThemeModeDescription(mode)),
+                value: mode,
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(
