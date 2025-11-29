@@ -90,8 +90,9 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }
 
   Future<void> _editEntry(LogEntry entry) async {
-    final TextEditingController noteController =
-        TextEditingController(text: entry.note ?? '');
+    final TextEditingController noteController = TextEditingController(
+      text: entry.note ?? '',
+    );
     final Set<String> selectedTags = Set.from(entry.tags);
 
     final result = await showDialog<bool>(
@@ -104,10 +105,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Tags',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text('Tags', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -160,9 +158,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
       if (selectedTags.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please select at least one tag'),
-            ),
+            const SnackBar(content: Text('Please select at least one tag')),
           );
         }
         return;
@@ -334,10 +330,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.only(left: 20),
-              child: const Icon(
-                Icons.edit,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.edit, color: Colors.white),
             ),
             secondaryBackground: Container(
               margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -347,10 +340,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ),
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 20),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.delete, color: Colors.white),
             ),
             confirmDismiss: (direction) async {
               if (direction == DismissDirection.startToEnd) {
@@ -364,15 +354,17 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   builder: (context) => AlertDialog(
                     title: const Text('Delete Entry'),
                     content: const Text(
-                        'Are you sure you want to delete this entry?'),
+                      'Are you sure you want to delete this entry?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
-                        style:
-                            TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
                         onPressed: () => Navigator.pop(context, true),
                         child: const Text('Delete'),
                       ),
@@ -424,8 +416,9 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4),
-                    Text(DateFormat('MMM d, y • h:mm a')
-                        .format(entry.createdAt)),
+                    Text(
+                      DateFormat('MMM d, y • h:mm a').format(entry.createdAt),
+                    ),
                     if (entry.note != null && entry.note!.isNotEmpty)
                       Text(
                         entry.note!,
