@@ -58,16 +58,17 @@ class SettingsScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: ThemeMode.values.map((mode) {
-            return RadioListTile<ThemeMode>(
+            final isSelected = themeProvider.themeMode == mode;
+            return ListTile(
               title: Text(_getThemeModeLabel(mode)),
               subtitle: Text(_getThemeModeDescription(mode)),
-              value: mode,
-              groupValue: themeProvider.themeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  themeProvider.setThemeMode(value);
-                  Navigator.pop(context);
-                }
+              leading: Icon(
+                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: isSelected ? Theme.of(context).colorScheme.primary : null,
+              ),
+              onTap: () {
+                themeProvider.setThemeMode(mode);
+                Navigator.pop(context);
               },
             );
           }).toList(),
