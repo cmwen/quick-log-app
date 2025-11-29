@@ -5,14 +5,21 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:provider/provider.dart';
 import 'package:quick_log_app/main.dart';
+import 'package:quick_log_app/providers/theme_provider.dart';
 
 void main() {
   testWidgets('Quick Log app starts', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const QuickLogApp());
+    // Build our app with provider and trigger a frame.
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(),
+        child: const QuickLogApp(),
+      ),
+    );
 
     // Verify that the app starts
     expect(find.text('Quick Log'), findsOneWidget);
