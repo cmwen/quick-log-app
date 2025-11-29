@@ -51,30 +51,29 @@ class SettingsScreen extends StatelessWidget {
   void _showThemeDialog(BuildContext context, ThemeProvider themeProvider) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Choose Theme'),
-        content: RadioGroup<ThemeMode>(
-          groupValue: themeProvider.themeMode,
-          onChanged: (value) {
-            if (value != null) {
-              themeProvider.setThemeMode(value);
-              Navigator.pop(context);
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ThemeMode.values.map((mode) {
-              return RadioListTile<ThemeMode>(
-                title: Text(_getThemeModeLabel(mode)),
-                subtitle: Text(_getThemeModeDescription(mode)),
-                value: mode,
-              );
-            }).toList(),
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ThemeMode.values.map((mode) {
+            final isSelected = themeProvider.themeMode == mode;
+            return ListTile(
+              leading: Icon(
+                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: isSelected ? Theme.of(dialogContext).colorScheme.primary : null,
+              ),
+              title: Text(_getThemeModeLabel(mode)),
+              subtitle: Text(_getThemeModeDescription(mode)),
+              onTap: () {
+                themeProvider.setThemeMode(mode);
+                Navigator.pop(dialogContext);
+              },
+            );
+          }).toList(),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
         ],
