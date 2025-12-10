@@ -167,59 +167,15 @@ class _MainScreenState extends State<MainScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'All Tags',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: _allTags.length,
-                itemBuilder: (context, index) {
-                  final tag = _allTags[index];
-                  return CheckboxListTile(
-                    title: Text(tag.label),
-                    subtitle: Text(
-                      '${tag.category.name} • Used ${tag.usageCount} times',
-                    ),
-                    value: _selectedTags.contains(tag.id),
-                    onChanged: (value) {
-                      setState(() {
-                        _toggleTag(tag.id);
-                      });
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+      builder: (context) => _TagSearchModal(
+        allTags: _allTags,
+        selectedTags: _selectedTags,
+        onTagToggle: (tagId) {
+          setState(() {
+            _toggleTag(tagId);
+          });
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -421,6 +377,194 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(icon: Icon(Icons.edit), label: 'Record'),
           NavigationDestination(icon: Icon(Icons.list), label: 'Entries'),
           NavigationDestination(icon: Icon(Icons.label), label: 'Tags'),
+        ],
+      ),
+    );
+  }
+}
+
+/// Modal widget for searching and selecting tags
+class _TagSearchModal extends StatefulWidget {
+  final List<LogTag> allTags;
+  final Set<String> selectedTags;
+  final Function(String) onTagToggle;
+
+  const _TagSearchModal({
+    required this.allTags,
+    required this.selectedTags,
+    required this.onTagToggle,
+  });
+
+  @override
+  State<_TagSearchModal> createState() => _TagSearchModalState();
+}
+
+class _TagSearchModalState extends State<_TagSearchModal> {
+  final TextEditingController _searchController = TextEditingController();
+  List<LogTag> _filteredTags = [];
+  TagCategory? _filterCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredTags = widget.allTags;
+    _searchController.addListener(_filterTags);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterTags() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredTags = widget.allTags.where((tag) {
+        final matchesSearch = query.isEmpty ||
+            tag.label.toLowerCase().contains(query) ||
+            tag.id.toLowerCase().contains(query);
+        final matchesCategory =
+            _filterCategory == null || tag.category == _filterCategory;
+        return matchesSearch && matchesCategory;
+      }).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      maxChildSize: 0.9,
+      minChildSize: 0.5,
+      expand: false,
+      builder: (context, scrollController) => Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Tags',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Search field
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search tags...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Category filter chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      FilterChip(
+                        label: const Text('All'),
+                        selected: _filterCategory == null,
+                        onSelected: (_) {
+                          setState(() {
+                            _filterCategory = null;
+                            _filterTags();
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ...TagCategory.values.map((category) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(
+                              category.name[0].toUpperCase() +
+                                  category.name.substring(1),
+                            ),
+                            selected: _filterCategory == category,
+                            onSelected: (_) {
+                              setState(() {
+                                _filterCategory = category;
+                                _filterTags();
+                              });
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Results
+          Expanded(
+            child: _filteredTags.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No tags found',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: scrollController,
+                    itemCount: _filteredTags.length,
+                    itemBuilder: (context, index) {
+                      final tag = _filteredTags[index];
+                      final isSelected = widget.selectedTags.contains(tag.id);
+                      return CheckboxListTile(
+                        title: Text(tag.label),
+                        subtitle: Text(
+                          '${tag.category.name} • Used ${tag.usageCount} times',
+                        ),
+                        value: isSelected,
+                        onChanged: (value) {
+                          widget.onTagToggle(tag.id);
+                        },
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
     );
