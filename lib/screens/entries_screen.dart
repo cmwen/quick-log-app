@@ -11,9 +11,6 @@ class EntriesScreen extends StatefulWidget {
   State<EntriesScreen> createState() => _EntriesScreenState();
 }
 
-/// Global key to access EntriesScreenState from parent
-final GlobalKey<_EntriesScreenState> entriesScreenKey = GlobalKey<_EntriesScreenState>();
-
 class _EntriesScreenState extends State<EntriesScreen> {
   List<LogEntry> _entries = [];
   List<LogEntry> _filteredEntries = [];
@@ -539,7 +536,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
       );
     }
 
-    final displayEntries = _filteredEntries.isEmpty && !_hasActiveFilters ? _entries : _filteredEntries;
+    final displayEntries = _hasActiveFilters ? _filteredEntries : _entries;
 
     return Scaffold(
       body: Column(
