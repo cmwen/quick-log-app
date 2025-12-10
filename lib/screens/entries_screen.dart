@@ -11,11 +11,21 @@ class EntriesScreen extends StatefulWidget {
   State<EntriesScreen> createState() => _EntriesScreenState();
 }
 
+/// Global key to access EntriesScreenState from parent
+final GlobalKey<_EntriesScreenState> entriesScreenKey = GlobalKey<_EntriesScreenState>();
+
 class _EntriesScreenState extends State<EntriesScreen> {
   List<LogEntry> _entries = [];
+  List<LogEntry> _filteredEntries = [];
   Map<String, LogTag> _tagMap = {};
   List<LogTag> _allTags = [];
   bool _isLoading = true;
+  
+  // Filter state
+  Set<String> _selectedFilterTags = {};
+  DateTime? _startDate;
+  DateTime? _endDate;
+  bool? _hasLocation; // null = all, true = with location, false = without location
 
   @override
   void initState() {
@@ -36,6 +46,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
         _allTags = tags;
         _isLoading = false;
       });
+      _applyFilters();
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -44,6 +55,49 @@ class _EntriesScreenState extends State<EntriesScreen> {
         ).showSnackBar(SnackBar(content: Text('Error loading entries: $e')));
       }
     }
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredEntries = _entries.where((entry) {
+        // Tag filter
+        if (_selectedFilterTags.isNotEmpty) {
+          final hasAllTags = _selectedFilterTags.every((tag) => entry.tags.contains(tag));
+          if (!hasAllTags) return false;
+        }
+
+        // Date range filter
+        if (_startDate != null) {
+          if (entry.createdAt.isBefore(_startDate!)) return false;
+        }
+        if (_endDate != null) {
+          final endOfDay = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59);
+          if (entry.createdAt.isAfter(endOfDay)) return false;
+        }
+
+        // Location filter
+        if (_hasLocation != null) {
+          final entryHasLocation = entry.latitude != null && entry.longitude != null;
+          if (_hasLocation! && !entryHasLocation) return false;
+          if (!_hasLocation! && entryHasLocation) return false;
+        }
+
+        return true;
+      }).toList();
+    });
+  }
+
+  bool get _hasActiveFilters =>
+      _selectedFilterTags.isNotEmpty || _startDate != null || _endDate != null || _hasLocation != null;
+
+  void _clearFilters() {
+    setState(() {
+      _selectedFilterTags.clear();
+      _startDate = null;
+      _endDate = null;
+      _hasLocation = null;
+    });
+    _applyFilters();
   }
 
   Future<void> _deleteEntry(LogEntry entry, {bool confirm = true}) async {
@@ -286,6 +340,172 @@ class _EntriesScreenState extends State<EntriesScreen> {
     );
   }
 
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          expand: false,
+          builder: (context, scrollController) => SingleChildScrollView(
+            controller: scrollController,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Filter Entries',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // Tag filter
+                Text('Tags', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Text(
+                  'Show entries with ALL selected tags',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _allTags.map((tag) {
+                    final isSelected = _selectedFilterTags.contains(tag.id);
+                    return FilterChip(
+                      label: Text(tag.label),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setModalState(() {
+                          if (selected) {
+                            _selectedFilterTags.add(tag.id);
+                          } else {
+                            _selectedFilterTags.remove(tag.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Date range filter
+                Text('Date Range', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _startDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setModalState(() => _startDate = date);
+                          }
+                        },
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(_startDate != null
+                            ? DateFormat('MMM d, y').format(_startDate!)
+                            : 'Start Date'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _endDate ?? DateTime.now(),
+                            firstDate: _startDate ?? DateTime(2020),
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setModalState(() => _endDate = date);
+                          }
+                        },
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(_endDate != null
+                            ? DateFormat('MMM d, y').format(_endDate!)
+                            : 'End Date'),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Location filter
+                Text('Location', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 12),
+                SegmentedButton<bool?>(
+                  segments: const [
+                    ButtonSegment(value: null, label: Text('All')),
+                    ButtonSegment(value: true, label: Text('With Location')),
+                    ButtonSegment(value: false, label: Text('No Location')),
+                  ],
+                  selected: {_hasLocation},
+                  onSelectionChanged: (Set<bool?> newSelection) {
+                    setModalState(() {
+                      _hasLocation = newSelection.first;
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Apply and clear buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          setModalState(() {
+                            _selectedFilterTags.clear();
+                            _startDate = null;
+                            _endDate = null;
+                            _hasLocation = null;
+                          });
+                        },
+                        child: const Text('Clear All'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          _applyFilters();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Apply'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -293,7 +513,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
     }
 
     if (_entries.isEmpty) {
-      return Center(
+      return Scaffold(
+        body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -314,16 +535,75 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
           ],
         ),
+        ),
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: _entries.length,
-        itemBuilder: (context, index) {
-          final entry = _entries[index];
+    final displayEntries = _filteredEntries.isEmpty && !_hasActiveFilters ? _entries : _filteredEntries;
+
+    return Scaffold(
+      body: Column(
+      children: [
+        // Filter status bar
+        if (_hasActiveFilters)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.filter_list,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${displayEntries.length} of ${_entries.length} entries',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _clearFilters,
+                  icon: const Icon(Icons.clear, size: 18),
+                  label: const Text('Clear'),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: displayEntries.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No entries match filters',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _clearFilters,
+                        child: const Text('Clear filters'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: displayEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = displayEntries[index];
           return Dismissible(
             key: Key('entry_${entry.id}'),
             background: Container(
@@ -457,7 +737,19 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ),
             ),
           );
-        },
+                    },
+                  ),
+                ),
+        ),
+      ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showFilterDialog,
+        tooltip: 'Filter entries',
+        child: Badge(
+          isLabelVisible: _hasActiveFilters,
+          child: const Icon(Icons.filter_list),
+        ),
       ),
     );
   }
