@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
+import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/screens/main_screen.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+      ],
       child: const QuickLogApp(),
     ),
   );

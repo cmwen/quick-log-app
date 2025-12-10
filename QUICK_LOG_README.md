@@ -11,24 +11,29 @@ A tag-first logging Android application for quick note-taking with automatic loc
 ### Core Functionality
 - **Tag-First Approach** - Select tags before writing, emphasizing quick categorization
 - **Smart Tag System** - Pre-populated tags across 5 categories (Activity, Location, Mood, People, Custom)
-- **Automatic Location Tracking** - GPS coordinates and geocoded address capture
+- **Searchable Tags** - Easily find tags with search and category filters when creating entries
+- **Optional Location Tracking** - Toggle GPS tracking on/off (default: enabled)
 - **Quick Entry Creation** - Minimal friction for fast logging
+- **Advanced Entry Filtering** - Filter entries by tags, date range, and location
 - **Entry Management** - View, filter, and delete past entries with swipe actions
 - **Tag Management** - Add custom tags and view usage statistics
 
 ### Map & Location
 - **Map View** - Interactive OpenStreetMap showing all logged locations
 - **Location Markers** - Tap markers to view entry details
-- **Automatic Location** - GPS capture with reverse geocoding
+- **Location Toggle** - Enable/disable location tracking in Settings
+- **Location Privacy** - Location data never leaves your device
 
 ### Data Management
 - **Export to JSON** - Full data export in LLM-friendly format
 - **Export to CSV** - Spreadsheet-compatible export
 - **Import from JSON** - Restore entries from backup
+- **Tag Import/Export** - Export tags for LLM customization, then re-import
 - **Share Data** - Share exports via system share sheet
 
 ### Settings & Customization
 - **Theme Selection** - Choose System, Light, or Dark theme
+- **Location Control** - Toggle location tracking on/off
 - **Persistent Settings** - Preferences saved across sessions
 - **Custom App Icon** - Blue-themed branded icon
 
@@ -91,8 +96,11 @@ flutter build appbundle --release
 ### Creating a Log Entry
 
 1. **Select Tags** - Tap on tag chips to select categories (Activity, Mood, Location, People)
+   - Tap "See all tags" to open searchable tag selector
+   - Use search field to find specific tags
+   - Filter by category for easier navigation
 2. **Add Note (Optional)** - Write additional context in the note field
-3. **Location** - Location is captured automatically (if permitted)
+3. **Location** - Location is captured automatically if enabled in Settings
 4. **Save** - Tap "Save Entry" to log your entry
 
 ### Managing Tags
@@ -103,13 +111,18 @@ flutter build appbundle --release
 4. View usage statistics for each tag
 5. Delete unused tags by tapping the delete icon
 
-### Viewing Entries
+### Viewing & Filtering Entries
 
 1. Navigate to the **Entries** tab
-2. Tap any entry to view full details
-3. Pull down to refresh the list
-4. **Swipe left** on an entry to delete it
-5. **Swipe right** on an entry to edit it
+2. Tap the **filter button** (floating action button) to filter entries:
+   - **By Tags** - Select multiple tags (shows entries with ALL selected tags)
+   - **By Date** - Set start and/or end date
+   - **By Location** - Filter entries with/without location data
+3. Active filters are shown in a status bar
+4. Tap "Clear" to remove all filters
+5. Pull down to refresh the list
+6. **Swipe left** on an entry to delete it
+7. **Swipe right** on an entry to edit it
 
 ### Using the Map View
 
@@ -122,21 +135,45 @@ flutter build appbundle --release
 
 1. Navigate to the **Settings** tab
 2. Choose export format:
-   - **Export JSON** - Complete data backup (recommended for restore)
-   - **Export CSV** - Spreadsheet-compatible format
+   - **Export All Data (JSON)** - Complete data backup (recommended for restore)
+   - **Export All Data (CSV)** - Spreadsheet-compatible format
+   - **Export Tags Only** - Share tags for LLM customization
 3. Use the share sheet to save or send the file
 
 ### Importing Data
 
 1. Navigate to the **Settings** tab
-2. Tap **Import JSON**
+2. Choose import type:
+   - **Import All Data** - Restore entries and tags from JSON backup
+   - **Import Tags** - Import customized tags (new tags added, existing updated)
 3. Select a previously exported JSON file
-4. Entries will be merged with existing data
+4. Data will be merged with existing data
+
+### Customizing Tags with LLM
+
+1. Navigate to **Settings** → **Export Tags Only**
+2. Share/save the tags JSON file
+3. Use an LLM (ChatGPT, Claude, etc.) to customize:
+   - Add new tags tailored to your needs
+   - Modify existing tag labels and categories
+   - Generate tags based on your activities
+4. Save the customized JSON file
+5. Go to **Settings** → **Import Tags** and select the file
+6. Your custom tags are now available!
+
+### Managing Location Tracking
+
+1. Navigate to the **Settings** tab
+2. Under **Privacy**, toggle **Enable Location Tracking**
+3. When disabled:
+   - New entries won't capture location
+   - Existing entries with location remain unchanged
+   - You can still manually refresh location when creating entries
 
 ### Changing Theme
 
 1. Navigate to the **Settings** tab
-2. Under **Theme**, select:
+2. Under **Appearance**, select:
    - **System** - Follow device dark/light mode
    - **Light** - Always use light theme
    - **Dark** - Always use dark theme
@@ -211,11 +248,13 @@ lib/
 
 ## 🔒 Privacy & Permissions
 
-### Required Permissions
+### Optional Permissions
 
 - **Location (Android/iOS)** - To capture where entries are created
-  - Can be denied; app will work without location tracking
+  - Can be disabled in Settings (toggle on/off)
+  - Can be denied at OS level; app will work without location tracking
   - Location data never leaves your device
+  - Default: Enabled (can be changed anytime)
 
 ### Data Storage
 
@@ -241,16 +280,23 @@ lib/
 - [x] Settings screen with theme selection
 - [x] Swipe actions (edit/delete entries)
 
-### Phase 3 (Planned)
-- [ ] Search and advanced filtering
-- [ ] Statistics and insights
-- [ ] Tag relationship suggestions
-- [ ] Date range filtering
+### Phase 3 ✅ Complete
+- [x] Location toggle (enable/disable tracking)
+- [x] Searchable tag selection
+- [x] Tag import/export for LLM customization
+- [x] Advanced entry filtering (tags, date range, location)
 
-### Phase 4 (Future)
+### Phase 4 (Planned)
+- [ ] Statistics and insights dashboard
+- [ ] Tag relationship suggestions
+- [ ] Export to additional formats (Markdown, PDF)
+- [ ] Entry templates
+
+### Phase 5 (Future)
 - [ ] Data backup/restore to cloud
 - [ ] Widgets for quick logging
 - [ ] Custom color themes
+- [ ] Voice-to-text for notes
 
 ## 🤝 Contributing
 
