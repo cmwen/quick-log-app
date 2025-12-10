@@ -65,7 +65,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _getCurrentLocation({bool force = false}) async {
     // Check if location is enabled in settings
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
     if (!settingsProvider.locationEnabled && !force) {
       setState(() {
         _currentPosition = null;
@@ -187,128 +190,134 @@ class _MainScreenState extends State<MainScreen> {
 
     return Consumer<SettingsProvider>(
       builder: (context, settingsProvider, child) => SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Recent Tags Section
-          Text(
-            'Quick Select Tags',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _recentTags.map((tag) {
-              return TagChipWidget(
-                tag: tag,
-                isSelected: _selectedTags.contains(tag.id),
-                onTap: () => _toggleTag(tag.id),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: _showAllTags,
-            icon: const Icon(Icons.more_horiz),
-            label: const Text('See all tags'),
-          ),
-
-          // Selected Tags Section
-          if (_selectedTags.isNotEmpty) ...[
-            const SizedBox(height: 24),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Recent Tags Section
             Text(
-              'Selected Tags (${_selectedTags.length})',
-              style: Theme.of(context).textTheme.titleMedium,
+              'Quick Select Tags',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _selectedTags.map((tagId) {
-                final tag = _allTags.firstWhere((t) => t.id == tagId);
+              children: _recentTags.map((tag) {
                 return TagChipWidget(
                   tag: tag,
-                  isSelected: true,
+                  isSelected: _selectedTags.contains(tag.id),
                   onTap: () => _toggleTag(tag.id),
-                  showClose: true,
                 );
               }).toList(),
             ),
-          ],
-
-          // Note Section
-          const SizedBox(height: 24),
-          Text(
-            'Add Note (Optional)',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _noteController,
-            decoration: InputDecoration(
-              hintText: 'What\'s happening?',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: _showAllTags,
+              icon: const Icon(Icons.more_horiz),
+              label: const Text('See all tags'),
             ),
-            maxLines: 4,
-          ),
 
-          // Location Section
-          const SizedBox(height: 24),
-          Card(
-            child: ListTile(
-              leading: Icon(
-                settingsProvider.locationEnabled
-                    ? (_currentPosition != null ? Icons.location_on : Icons.location_searching)
-                    : Icons.location_disabled,
-                color: settingsProvider.locationEnabled && _currentPosition != null
-                    ? Theme.of(context).colorScheme.primary
+            // Selected Tags Section
+            if (_selectedTags.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                'Selected Tags (${_selectedTags.length})',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _selectedTags.map((tagId) {
+                  final tag = _allTags.firstWhere((t) => t.id == tagId);
+                  return TagChipWidget(
+                    tag: tag,
+                    isSelected: true,
+                    onTap: () => _toggleTag(tag.id),
+                    showClose: true,
+                  );
+                }).toList(),
+              ),
+            ],
+
+            // Note Section
+            const SizedBox(height: 24),
+            Text(
+              'Add Note (Optional)',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _noteController,
+              decoration: InputDecoration(
+                hintText: 'What\'s happening?',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              maxLines: 4,
+            ),
+
+            // Location Section
+            const SizedBox(height: 24),
+            Card(
+              child: ListTile(
+                leading: Icon(
+                  settingsProvider.locationEnabled
+                      ? (_currentPosition != null
+                            ? Icons.location_on
+                            : Icons.location_searching)
+                      : Icons.location_disabled,
+                  color:
+                      settingsProvider.locationEnabled &&
+                          _currentPosition != null
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+                title: Text(
+                  settingsProvider.locationEnabled
+                      ? (_locationLabel ?? 'Location not available')
+                      : 'Location tracking disabled',
+                ),
+                subtitle: settingsProvider.locationEnabled
+                    ? (_currentPosition != null
+                          ? Text(
+                              'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
+                              'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                            )
+                          : const Text('Tap refresh to get location'))
+                    : const Text('Enable in Settings to track location'),
+                trailing: settingsProvider.locationEnabled
+                    ? (_isGettingLocation
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.refresh),
+                              onPressed: () => _getCurrentLocation(force: true),
+                            ))
                     : null,
               ),
-              title: Text(
-                settingsProvider.locationEnabled
-                    ? (_locationLabel ?? 'Location not available')
-                    : 'Location tracking disabled',
-              ),
-              subtitle: settingsProvider.locationEnabled
-                  ? (_currentPosition != null
-                      ? Text(
-                          'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
-                          'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
-                        )
-                      : const Text('Tap refresh to get location'))
-                  : const Text('Enable in Settings to track location'),
-              trailing: settingsProvider.locationEnabled
-                  ? (_isGettingLocation
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.refresh),
-                          onPressed: () => _getCurrentLocation(force: true),
-                        ))
-                  : null,
             ),
-          ),
 
-          // Save Button
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _saveEntry,
-              icon: const Icon(Icons.save),
-              label: const Text('Save Entry'),
-              style: FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
+            // Save Button
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _saveEntry,
+                icon: const Icon(Icons.save),
+                label: const Text('Save Entry'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -421,7 +430,8 @@ class _TagSearchModalState extends State<_TagSearchModal> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredTags = widget.allTags.where((tag) {
-        final matchesSearch = query.isEmpty ||
+        final matchesSearch =
+            query.isEmpty ||
             tag.label.toLowerCase().contains(query) ||
             tag.id.toLowerCase().contains(query);
         final matchesCategory =

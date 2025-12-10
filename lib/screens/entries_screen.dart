@@ -17,12 +17,13 @@ class _EntriesScreenState extends State<EntriesScreen> {
   Map<String, LogTag> _tagMap = {};
   List<LogTag> _allTags = [];
   bool _isLoading = true;
-  
+
   // Filter state
-  Set<String> _selectedFilterTags = {};
+  final Set<String> _selectedFilterTags = {};
   DateTime? _startDate;
   DateTime? _endDate;
-  bool? _hasLocation; // null = all, true = with location, false = without location
+  bool?
+  _hasLocation; // null = all, true = with location, false = without location
 
   @override
   void initState() {
@@ -59,7 +60,9 @@ class _EntriesScreenState extends State<EntriesScreen> {
       _filteredEntries = _entries.where((entry) {
         // Tag filter
         if (_selectedFilterTags.isNotEmpty) {
-          final hasAllTags = _selectedFilterTags.every((tag) => entry.tags.contains(tag));
+          final hasAllTags = _selectedFilterTags.every(
+            (tag) => entry.tags.contains(tag),
+          );
           if (!hasAllTags) return false;
         }
 
@@ -68,13 +71,21 @@ class _EntriesScreenState extends State<EntriesScreen> {
           if (entry.createdAt.isBefore(_startDate!)) return false;
         }
         if (_endDate != null) {
-          final endOfDay = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59);
+          final endOfDay = DateTime(
+            _endDate!.year,
+            _endDate!.month,
+            _endDate!.day,
+            23,
+            59,
+            59,
+          );
           if (entry.createdAt.isAfter(endOfDay)) return false;
         }
 
         // Location filter
         if (_hasLocation != null) {
-          final entryHasLocation = entry.latitude != null && entry.longitude != null;
+          final entryHasLocation =
+              entry.latitude != null && entry.longitude != null;
           if (_hasLocation! && !entryHasLocation) return false;
           if (!_hasLocation! && entryHasLocation) return false;
         }
@@ -85,7 +96,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }
 
   bool get _hasActiveFilters =>
-      _selectedFilterTags.isNotEmpty || _startDate != null || _endDate != null || _hasLocation != null;
+      _selectedFilterTags.isNotEmpty ||
+      _startDate != null ||
+      _endDate != null ||
+      _hasLocation != null;
 
   void _clearFilters() {
     setState(() {
@@ -141,8 +155,9 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }
 
   Future<void> _editEntry(LogEntry entry) async {
-    final TextEditingController noteController =
-        TextEditingController(text: entry.note ?? '');
+    final TextEditingController noteController = TextEditingController(
+      text: entry.note ?? '',
+    );
     final Set<String> selectedTags = Set.from(entry.tags);
 
     final result = await showDialog<bool>(
@@ -155,10 +170,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Tags',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text('Tags', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -211,9 +223,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
       if (selectedTags.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please select at least one tag'),
-            ),
+            const SnackBar(content: Text('Please select at least one tag')),
           );
         }
         return;
@@ -367,7 +377,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Tag filter
                 Text('Tags', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
@@ -396,11 +406,14 @@ class _EntriesScreenState extends State<EntriesScreen> {
                     );
                   }).toList(),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Date range filter
-                Text('Date Range', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Date Range',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -418,9 +431,11 @@ class _EntriesScreenState extends State<EntriesScreen> {
                           }
                         },
                         icon: const Icon(Icons.calendar_today),
-                        label: Text(_startDate != null
-                            ? DateFormat('MMM d, y').format(_startDate!)
-                            : 'Start Date'),
+                        label: Text(
+                          _startDate != null
+                              ? DateFormat('MMM d, y').format(_startDate!)
+                              : 'Start Date',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -438,18 +453,23 @@ class _EntriesScreenState extends State<EntriesScreen> {
                           }
                         },
                         icon: const Icon(Icons.calendar_today),
-                        label: Text(_endDate != null
-                            ? DateFormat('MMM d, y').format(_endDate!)
-                            : 'End Date'),
+                        label: Text(
+                          _endDate != null
+                              ? DateFormat('MMM d, y').format(_endDate!)
+                              : 'End Date',
+                        ),
                       ),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Location filter
-                Text('Location', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Location',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 12),
                 SegmentedButton<bool?>(
                   segments: const [
@@ -464,9 +484,9 @@ class _EntriesScreenState extends State<EntriesScreen> {
                     });
                   },
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Apply and clear buttons
                 Row(
                   children: [
@@ -512,26 +532,26 @@ class _EntriesScreenState extends State<EntriesScreen> {
     if (_entries.isEmpty) {
       return Scaffold(
         body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No entries yet',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Start logging to see your entries here',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.inbox_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No entries yet',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Start logging to see your entries here',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -540,205 +560,223 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
     return Scaffold(
       body: Column(
-      children: [
-        // Filter status bar
-        if (_hasActiveFilters)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Theme.of(context).colorScheme.primaryContainer,
-            child: Row(
-              children: [
-                Icon(
-                  Icons.filter_list,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${displayEntries.length} of ${_entries.length} entries',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+        children: [
+          // Filter status bar
+          if (_hasActiveFilters)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${displayEntries.length} of ${_entries.length} entries',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
-                ),
-                TextButton.icon(
-                  onPressed: _clearFilters,
-                  icon: const Icon(Icons.clear, size: 18),
-                  label: const Text('Clear'),
-                ),
-              ],
-            ),
-          ),
-        Expanded(
-          child: displayEntries.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No entries match filters',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _clearFilters,
-                        child: const Text('Clear filters'),
-                      ),
-                    ],
+                  TextButton.icon(
+                    onPressed: _clearFilters,
+                    icon: const Icon(Icons.clear, size: 18),
+                    label: const Text('Clear'),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: displayEntries.length,
-                    itemBuilder: (context, index) {
-                      final entry = displayEntries[index];
-          return Dismissible(
-            key: Key('entry_${entry.id}'),
-            background: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 20),
-              child: const Icon(
-                Icons.edit,
-                color: Colors.white,
+                ],
               ),
             ),
-            secondaryBackground: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
-              ),
-            ),
-            confirmDismiss: (direction) async {
-              if (direction == DismissDirection.startToEnd) {
-                // Swipe right - Edit
-                await _editEntry(entry);
-                return false; // Don't dismiss, just edit
-              } else {
-                // Swipe left - Delete
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Delete Entry'),
-                    content: const Text(
-                        'Are you sure you want to delete this entry?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        style:
-                            TextButton.styleFrom(foregroundColor: Colors.red),
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-                return confirmed == true;
-              }
-            },
-            onDismissed: (direction) {
-              if (direction == DismissDirection.endToStart) {
-                _deleteEntry(entry, confirm: false);
-              }
-            },
-            child: Card(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  child: Text(DateFormat('d').format(entry.createdAt)),
-                ),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 4,
-                        children: entry.tags.take(3).map((tagId) {
-                          final tag = _tagMap[tagId];
-                          return Chip(
-                            label: Text(
-                              tag?.label ?? tagId,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            visualDensity: VisualDensity.compact,
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    if (entry.tags.length > 3)
-                      Chip(
-                        label: Text(
-                          '+${entry.tags.length - 3}',
-                          style: const TextStyle(fontSize: 12),
+          Expanded(
+            child: displayEntries.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.outline,
                         ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                  ],
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(DateFormat('MMM d, y • h:mm a')
-                        .format(entry.createdAt)),
-                    if (entry.note != null && entry.note!.isNotEmpty)
-                      Text(
-                        entry.note!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    if (entry.locationLabel != null)
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 12),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              entry.locationLabel!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 16),
+                        Text(
+                          'No entries match filters',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _clearFilters,
+                          child: const Text('Clear filters'),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: displayEntries.length,
+                      itemBuilder: (context, index) {
+                        final entry = displayEntries[index];
+                        return Dismissible(
+                          key: Key('entry_${entry.id}'),
+                          background: Container(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            child: const Icon(Icons.edit, color: Colors.white),
+                          ),
+                          secondaryBackground: Container(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
-                      ),
-                  ],
-                ),
-                isThreeLine: true,
-                onTap: () => _showEntryDetails(entry),
-                trailing: IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () => _showEntryDetails(entry),
-                ),
-              ),
-            ),
-          );
-                    },
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              // Swipe right - Edit
+                              await _editEntry(entry);
+                              return false; // Don't dismiss, just edit
+                            } else {
+                              // Swipe left - Delete
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Entry'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this entry?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return confirmed == true;
+                            }
+                          },
+                          onDismissed: (direction) {
+                            if (direction == DismissDirection.endToStart) {
+                              _deleteEntry(entry, confirm: false);
+                            }
+                          },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 8,
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                child: Text(
+                                  DateFormat('d').format(entry.createdAt),
+                                ),
+                              ),
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Wrap(
+                                      spacing: 4,
+                                      children: entry.tags.take(3).map((tagId) {
+                                        final tag = _tagMap[tagId];
+                                        return Chip(
+                                          label: Text(
+                                            tag?.label ?? tagId,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          visualDensity: VisualDensity.compact,
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                  if (entry.tags.length > 3)
+                                    Chip(
+                                      label: Text(
+                                        '+${entry.tags.length - 3}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                ],
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    DateFormat(
+                                      'MMM d, y • h:mm a',
+                                    ).format(entry.createdAt),
+                                  ),
+                                  if (entry.note != null &&
+                                      entry.note!.isNotEmpty)
+                                    Text(
+                                      entry.note!,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  if (entry.locationLabel != null)
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.location_on, size: 12),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            entry.locationLabel!,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                              isThreeLine: true,
+                              onTap: () => _showEntryDetails(entry),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.more_vert),
+                                onPressed: () => _showEntryDetails(entry),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-        ),
-      ],
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showFilterDialog,

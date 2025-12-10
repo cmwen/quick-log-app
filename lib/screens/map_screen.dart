@@ -44,9 +44,9 @@ class _MapScreenState extends State<MapScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading data: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
       }
     }
   }
@@ -135,16 +135,12 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_entriesWithLocation.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Map'),
-        ),
+        appBar: AppBar(title: const Text('Map')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -185,10 +181,7 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: Text('Map (${_entriesWithLocation.length} entries)'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
       ),
       body: FlutterMap(
@@ -203,11 +196,7 @@ class _MapScreenState extends State<MapScreen> {
             userAgentPackageName: 'com.cmwen.quick_log_app',
           ),
           const RichAttributionWidget(
-            attributions: [
-              TextSourceAttribution(
-                'OpenStreetMap contributors',
-              ),
-            ],
+            attributions: [TextSourceAttribution('OpenStreetMap contributors')],
           ),
           MarkerLayer(
             markers: _entriesWithLocation.map((entry) {

@@ -26,23 +26,27 @@ class DataExportService {
         'tagsCount': tags.length,
       },
       'tags': tags
-          .map((tag) => {
-                'id': tag.id,
-                'label': tag.label,
-                'category': tag.category.name,
-                'usageCount': tag.usageCount,
-              })
+          .map(
+            (tag) => {
+              'id': tag.id,
+              'label': tag.label,
+              'category': tag.category.name,
+              'usageCount': tag.usageCount,
+            },
+          )
           .toList(),
       'entries': entries
-          .map((entry) => {
-                'id': entry.id,
-                'createdAt': entry.createdAt.toIso8601String(),
-                'note': entry.note,
-                'tags': entry.tags,
-                'latitude': entry.latitude,
-                'longitude': entry.longitude,
-                'locationLabel': entry.locationLabel,
-              })
+          .map(
+            (entry) => {
+              'id': entry.id,
+              'createdAt': entry.createdAt.toIso8601String(),
+              'note': entry.note,
+              'tags': entry.tags,
+              'latitude': entry.latitude,
+              'longitude': entry.longitude,
+              'locationLabel': entry.locationLabel,
+            },
+          )
           .toList(),
     };
 
@@ -123,12 +127,14 @@ class DataExportService {
         'exportType': 'tags_only',
       },
       'tags': tags
-          .map((tag) => {
-                'id': tag.id,
-                'label': tag.label,
-                'category': tag.category.name,
-                'usageCount': tag.usageCount,
-              })
+          .map(
+            (tag) => {
+              'id': tag.id,
+              'label': tag.label,
+              'category': tag.category.name,
+              'usageCount': tag.usageCount,
+            },
+          )
           .toList(),
     };
 
