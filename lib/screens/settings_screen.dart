@@ -149,23 +149,38 @@ class SettingsScreen extends StatelessWidget {
                 ),
           ),
         ),
+        // Full data export/import
         ListTile(
           leading: const Icon(Icons.upload_outlined),
-          title: const Text('Export as JSON'),
-          subtitle: const Text('LLM-friendly format with metadata'),
+          title: const Text('Export All Data (JSON)'),
+          subtitle: const Text('Full backup with entries and tags'),
           onTap: () => _exportJson(context),
         ),
         ListTile(
           leading: const Icon(Icons.table_chart_outlined),
-          title: const Text('Export as CSV'),
+          title: const Text('Export All Data (CSV)'),
           subtitle: const Text('Spreadsheet compatible format'),
           onTap: () => _exportCsv(context),
         ),
         ListTile(
           leading: const Icon(Icons.download_outlined),
-          title: const Text('Import from JSON'),
-          subtitle: const Text('Restore from backup'),
+          title: const Text('Import All Data'),
+          subtitle: const Text('Restore entries and tags from JSON'),
           onTap: () => _importJson(context),
+        ),
+        const Divider(indent: 16, endIndent: 16),
+        // Tags-only export/import
+        ListTile(
+          leading: const Icon(Icons.label_outlined),
+          title: const Text('Export Tags Only'),
+          subtitle: const Text('Share tags for LLM customization'),
+          onTap: () => _exportTags(context),
+        ),
+        ListTile(
+          leading: const Icon(Icons.label_important_outlined),
+          title: const Text('Import Tags'),
+          subtitle: const Text('Import custom tags from JSON'),
+          onTap: () => _importTags(context),
         ),
       ],
     );
@@ -196,6 +211,68 @@ class SettingsScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportTags(BuildContext context) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preparing tags export...')),
+      );
+      await DataExportService.instance.shareTagsExport();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _importTags(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import Tags'),
+        content: const Text(
+          'This will import tags from a JSON file.\n\n'
+          'New tags will be added, existing tags will be updated '
+          '(label and category only, usage count preserved).\n\n'
+          'Tip: Export tags, customize them with an LLM, and re-import!\n\n'
+          'Do you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final result = await DataExportService.instance.importTagsFromJson();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor: result.success ? Colors.green : Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Import failed: $e')),
         );
       }
     }
