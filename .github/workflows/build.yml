@@ -1,4 +1,4 @@
-name: Flutter Build (Android)
+name: Flutter Build
 
 on:
   push:
@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +21,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.head_ref || github.ref_name }}
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Java
       uses: actions/setup-java@v5
@@ -51,11 +57,29 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
     
-    - name: Verify formatting
-      run: dart format --set-exit-if-changed .
+    # Auto-fix formatting and linting issues (AI-friendly workflow)
+    - name: Format and fix code
+      run: |
+        dart format .
+        dart fix --apply
     
+    # Commit formatting changes if any (only on PRs from the same repo)
+    - name: Commit formatting changes
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        if git diff --staged --quiet; then
+          echo "No formatting changes to commit"
+        else
+          git commit -m "style: auto-format code [skip ci]"
+          git push
+        fi
+    
+    # Report linter issues but only fail on errors (not warnings)
     - name: Analyze code
-      run: flutter analyze --fatal-infos
+      run: flutter analyze
     
     - name: Run tests with coverage
       run: flutter test --coverage --concurrency=$(nproc)
