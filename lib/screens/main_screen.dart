@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/models/log_tag.dart';
 import 'package:quick_log_app/data/database_helper.dart';
@@ -7,6 +8,7 @@ import 'package:quick_log_app/screens/tags_screen.dart';
 import 'package:quick_log_app/screens/map_screen.dart';
 import 'package:quick_log_app/screens/settings_screen.dart';
 import 'package:quick_log_app/widgets/tag_chip.dart';
+import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
@@ -32,7 +34,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _loadTags();
-    _getCurrentLocation();
+    // Location will be fetched when needed based on settings
   }
 
   @override
@@ -61,7 +63,18 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  Future<void> _getCurrentLocation() async {
+  Future<void> _getCurrentLocation({bool force = false}) async {
+    // Check if location is enabled in settings
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    if (!settingsProvider.locationEnabled && !force) {
+      setState(() {
+        _currentPosition = null;
+        _locationLabel = null;
+        _isGettingLocation = false;
+      });
+      return;
+    }
+
     setState(() => _isGettingLocation = true);
     try {
       final permission = await Geolocator.checkPermission();
@@ -216,7 +229,8 @@ class _MainScreenState extends State<MainScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, child) => SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,30 +305,38 @@ class _MainScreenState extends State<MainScreen> {
           Card(
             child: ListTile(
               leading: Icon(
-                _currentPosition != null
-                    ? Icons.location_on
-                    : Icons.location_off,
-                color: _currentPosition != null
+                settingsProvider.locationEnabled
+                    ? (_currentPosition != null ? Icons.location_on : Icons.location_searching)
+                    : Icons.location_disabled,
+                color: settingsProvider.locationEnabled && _currentPosition != null
                     ? Theme.of(context).colorScheme.primary
                     : null,
               ),
-              title: Text(_locationLabel ?? 'Location not available'),
-              subtitle: _currentPosition != null
-                  ? Text(
-                      'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
-                      'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
-                    )
-                  : const Text('Enable location for tracking'),
-              trailing: _isGettingLocation
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _getCurrentLocation,
-                    ),
+              title: Text(
+                settingsProvider.locationEnabled
+                    ? (_locationLabel ?? 'Location not available')
+                    : 'Location tracking disabled',
+              ),
+              subtitle: settingsProvider.locationEnabled
+                  ? (_currentPosition != null
+                      ? Text(
+                          'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
+                          'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                        )
+                      : const Text('Tap refresh to get location'))
+                  : const Text('Enable in Settings to track location'),
+              trailing: settingsProvider.locationEnabled
+                  ? (_isGettingLocation
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: () => _getCurrentLocation(force: true),
+                        ))
+                  : null,
             ),
           ),
 
@@ -330,6 +352,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

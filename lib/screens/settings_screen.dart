@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
+import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/services/data_export_service.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -15,6 +16,8 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         children: [
           _buildThemeSection(context),
+          const Divider(),
+          _buildPrivacySection(context),
           const Divider(),
           _buildDataSection(context),
           const Divider(),
@@ -103,6 +106,34 @@ class SettingsScreen extends StatelessWidget {
       case ThemeMode.dark:
         return 'Always use dark theme';
     }
+  }
+
+  Widget _buildPrivacySection(BuildContext context) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Privacy',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+        ),
+        SwitchListTile(
+          secondary: const Icon(Icons.location_on_outlined),
+          title: const Text('Enable Location Tracking'),
+          subtitle: const Text('Capture GPS location when creating entries'),
+          value: settingsProvider.locationEnabled,
+          onChanged: (value) {
+            settingsProvider.setLocationEnabled(value);
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildDataSection(BuildContext context) {
