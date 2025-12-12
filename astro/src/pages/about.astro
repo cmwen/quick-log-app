@@ -3,16 +3,32 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 ---
 <BaseLayout title="About">
   <section>
-    <h2>About this site</h2>
-    <p>This small site is the official static landing for the <code>quick-log-app</code> Flutter repository. It's built with Astro and a simple, maintainable theme so it's fast and easy to maintain.</p>
+    <h2>About Quick Log</h2>
+    <p class="lead">Quick Log is an Android tag-first logging app built with Flutter. It’s designed to capture entries in seconds, with optional location for extra context.</p>
 
     <div class="card">
-      <h3>How it works</h3>
+      <h3>Design principles</h3>
       <ul>
-        <li>Source in <code>/astro</code></li>
-        <li>Build uses <code>npm run build</code> to generate a static <code>dist/</code> folder</li>
-        <li>CI workflow deploys <code>dist/</code> to GitHub Pages when a GitHub Release is published (or on manual dispatch)</li>
+        <li><strong>Speed</strong>: quick capture with minimal steps</li>
+        <li><strong>Structure</strong>: tags first so entries stay searchable</li>
+        <li><strong>Privacy</strong>: data is stored locally on your device</li>
+        <li><strong>Control</strong>: location tracking can be toggled in Settings</li>
       </ul>
+    </div>
+
+    <div class="card">
+      <h3>This website</h3>
+      <ul>
+        <li>Source lives in <code>/astro</code></li>
+        <li>Build uses <code>npm run build</code> to generate a static <code>dist/</code> folder</li>
+        <li>Deploys to GitHub Pages under <code>/quick-log-app/</code> on release publish (or manual dispatch)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Links</h3>
+      <p><a href="https://github.com/cmwen/quick-log-app" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Repository →</a></p>
+      <p><a href="https://github.com/cmwen/quick-log-app/releases" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Releases →</a></p>
     </div>
   </section>
 </BaseLayout>

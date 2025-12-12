@@ -25,4 +25,5 @@ export default defineConfig({
   // Official site for this project (GitHub Pages project site)
   site: `https://${GITHUB_USERNAME}.github.io`,
   base: `/${REPO_NAME}`,
+  trailingSlash: 'always',
 });

@@ -1,53 +1,61 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+
+const baseUrlRaw = import.meta.env.BASE_URL;
+const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
 ---
 <BaseLayout title="Quick Log">
   <section>
-    <h2>Welcome 👋</h2>
-    <p class="lead">Quick Log is a minimal tag-first <strong>Flutter</strong> app for quick logging with optional location tracking. Build for Android, iOS, Web, and Desktop from a single codebase.</p>
+    <h2>Fast, tag-first logging on Android</h2>
+    <p class="lead">Quick Log is an Android app built with Flutter for capturing quick notes with tags and optional location—stored locally on your device.</p>
+
+    <div class="cta-row">
+      <a class="button primary" href="https://github.com/cmwen/quick-log-app/releases/latest" target="_blank" rel="noopener">View latest release</a>
+      <a class="button" href="https://github.com/cmwen/quick-log-app" target="_blank" rel="noopener">Open repository</a>
+    </div>
 
     <div class="card">
-      <h3>What's here</h3>
+      <h3>Why Quick Log</h3>
       <ul>
-        <li>Short project overview and docs link</li>
-        <li>Quick links to repository and CI</li>
-        <li>Clean, readable Quick Log theme</li>
+        <li><strong>Tag-first</strong>: pick tags first, then add optional notes</li>
+        <li><strong>Optional location</strong>: capture GPS + place label when enabled</li>
+        <li><strong>Offline-first</strong>: data stays on-device (SQLite)</li>
       </ul>
     </div>
 
     <div class="card">
-      <h3>Features</h3>
+      <h3>Key features</h3>
       <ul>
-        <li>Flutter 3.10.1+ with Material Design 3</li>
-        <li>Cross-platform: Android, iOS, Web, macOS, Linux, Windows</li>
-        <li>Simple dependency management with pubspec.yaml</li>
-        <li>CI/CD workflows with signed release support</li>
-        <li>AI-friendly customization points</li>
+        <li>Searchable tag selection + category filters</li>
+        <li>Entries list with advanced filters (tags, date range, with/without location)</li>
+        <li>Map view of logged locations</li>
+        <li>Export/import: JSON + CSV, plus tag-only export for LLM customization</li>
+        <li>Material Design 3 with theme support</li>
       </ul>
     </div>
 
     <div class="card">
-      <h3>Download / Release</h3>
-      <p class="lead">Get a packaged release from GitHub Releases (APK, App Bundle, Web).</p>
-      <p><a href="https://github.com/cmwen/quick-log-app/releases/latest" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Download latest release →</a></p>
+      <h3>Downloads</h3>
+      <p class="lead">Releases (when published) are hosted on GitHub. If you don't see an APK/AAB yet, you can build locally from source.</p>
+      <p><a href="https://github.com/cmwen/quick-log-app/releases/latest" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Open downloads →</a></p>
     </div>
 
     <div class="card">
-      <h3>Quick start</h3>
-      <p class="lead">Get started in minutes with Flutter.</p>
+      <h3>Developer quick start</h3>
+      <p class="lead">Clone, fetch dependencies, and run on an Android device or emulator.</p>
       <pre style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:8px;overflow:auto">git clone https://github.com/cmwen/quick-log-app.git
 cd quick-log-app
 flutter pub get
 flutter run</pre>
-      <p style="margin-top:8px"><a href="/install" style="color:var(--accent);text-decoration:none">Open full install guide →</a></p>
+      <p style="margin-top:8px"><a href={`${baseUrl}install/`} style="color:var(--accent);text-decoration:none">Open full install guide →</a></p>
     </div>
 
     <div class="card">
       <h3>Next steps</h3>
       <ol>
-        <li>Customize <code>lib/main.dart</code> with your app</li>
-        <li>Update <code>pubspec.yaml</code> with your app name</li>
-        <li>Configure <code>astro/astro.config.mjs</code> for your GitHub Pages URL</li>
+        <li>Read <code>QUICK_LOG_README.md</code> for the full feature guide</li>
+        <li>Customize tags and categories to match your workflow</li>
+        <li>Publish a GitHub Release to deploy this site automatically</li>
       </ol>
     </div>
   </section>

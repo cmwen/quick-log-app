@@ -1,5 +1,18 @@
 ---
 const { title } = Astro.props;
+
+const baseUrlRaw = import.meta.env.BASE_URL;
+const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
+const currentPathname = Astro.url.pathname;
+const relativePathname = currentPathname.slice(baseUrl.length - 1);
+
+const isActive = (href: string): boolean => {
+  if (href === '/') {
+    return relativePathname === '/';
+  }
+
+  return relativePathname === href;
+};
 ---
 <header class="site-title">
   <div class="logo">QL</div>
@@ -7,10 +20,10 @@ const { title } = Astro.props;
     <h1>{title}</h1>
     <p class="lead">Quick Log — A minimal, fast logging app focused on quick inputs</p>
     <nav class="nav">
-      <a href="/" class="active">Home</a>
-      <a href="/about">About</a>
-      <a href="/install">Install</a>
-      <a href="/releases">Releases</a>
+      <a href={baseUrl} class={isActive('/') ? 'active' : undefined}>Home</a>
+      <a href={`${baseUrl}about/`} class={isActive('/about/') ? 'active' : undefined}>About</a>
+      <a href={`${baseUrl}install/`} class={isActive('/install/') ? 'active' : undefined}>Install</a>
+      <a href={`${baseUrl}releases/`} class={isActive('/releases/') ? 'active' : undefined}>Releases</a>
       <a href="https://github.com/cmwen/quick-log-app" target="_blank" rel="noopener">Repository</a>
     </nav>
   </div>
