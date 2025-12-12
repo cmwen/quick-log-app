@@ -1,5 +1,7 @@
 # Quick Log - Android App
 
+Official website: https://cmwen.github.io/quick-log-app
+
 An Android-only tag-first logging application for quick note-taking with location tracking. Built with Flutter for optimal Android performance.
 
 ## ✨ Features

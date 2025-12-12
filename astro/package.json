@@ -1,7 +1,8 @@
 {
-  "name": "min-android-template-website",
+  "name": "quick-log-app-website",
   "private": true,
   "version": "0.1.0",
+  "homepage": "https://cmwen.github.io/quick-log-app",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

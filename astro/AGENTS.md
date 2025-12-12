@@ -1,12 +1,12 @@
 # Agents guide — astro/
 
-This file explains how AI agents and automated tools should work with the `astro/` Astro project for the `min-android-app-template` repository.
+This file explains how AI agents and automated tools should work with the `astro/` Astro project for the `quick-log-app` repository.
 
 Keep these instructions concise and actionable — follow them when making edits, testing locally, or changing CI/deployment behavior.
 
 ## Project overview
 
-- Location: `astro/` (this directory contains an Astro site with a Startlight-inspired theme)
+- Location: `astro/` (this directory contains an Astro site with the Quick Log theme)
 - Build output: `astro/dist/` (static files produced by `npm run build`)
 - Hosted: GitHub Pages via `.github/workflows/deploy-website.yml` (build & deploy when a GitHub Release is published)
 
@@ -43,7 +43,7 @@ const REPO_NAME = 'your-repo-name';
 - Styling and assets
   - Minor theme tweaks should go in `astro/src/styles.css`.
   - Add media assets to `astro/public/` if needed (create the folder). Don't commit very large files; prefer optimized images.
-
+$$
   - Project prompts & design helpers
     - The repository contains Copilot custom prompts under `.github/prompts/` (e.g. `icon-generation.prompt.md`) — use these for consistent, copy-ready prompts when generating icons, SVGs, VectorDrawable XML, or launcher assets.
 
@@ -60,7 +60,7 @@ const REPO_NAME = 'your-repo-name';
 - Keep pages accessible and lightweight — static HTML, minimal client JS.
 - Use clear headings and short paragraphs (two to four sentences per paragraph).
 - For any external links, use rel="noopener" and target="_blank".
-- Follow the Startlight style: dark, elegant, compact cards and concise text.
+- Follow the Quick Log theme: clean, readable, compact cards and concise text.
 
 ## Testing & validation
 
@@ -79,7 +79,7 @@ const REPO_NAME = 'your-repo-name';
 ```js
 // astro/astro.config.mjs
 const GITHUB_USERNAME = 'cmwen';
-const REPO_NAME = 'min-android-app-template';
+const REPO_NAME = 'quick-log-app';
 
 export default defineConfig({
   site: `https://${GITHUB_USERNAME}.github.io`,

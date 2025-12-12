@@ -19,9 +19,10 @@ import { defineConfig } from 'astro/config';
 // ============================================================================
 
 const GITHUB_USERNAME = 'cmwen';
-const REPO_NAME = 'min-android-app-template';
+const REPO_NAME = 'quick-log-app';
 
 export default defineConfig({
+  // Official site for this project (GitHub Pages project site)
   site: `https://${GITHUB_USERNAME}.github.io`,
   base: `/${REPO_NAME}`,
 });

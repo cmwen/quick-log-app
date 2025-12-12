@@ -27,7 +27,7 @@ Your site will be deployed to: `https://your-username.github.io/your-repo-name/`
 
 ## Features
 
-- Small Startlight-inspired theme (dark, readable, fast)
+- Small Quick Log theme (clean, readable, fast)
 - Minimal pages: Home, About, Install, Releases
 - Auto-deploy to GitHub Pages via `.github/workflows/deploy-website.yml`
 - Published when a GitHub Release is created (or via manual workflow dispatch)
@@ -53,5 +53,5 @@ flutter build web         # Web
 ## Releases
 
 Download prebuilt artifacts from GitHub Releases:
-https://github.com/cmwen/min-android-app-template/releases/latest
+https://github.com/cmwen/quick-log-app/releases/latest
 
