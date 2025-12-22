@@ -9,7 +9,7 @@
     "preview": "astro preview --port 3000"
   },
   "devDependencies": {
-    "astro": "^5.16.5"
+    "astro": "^5.16.6"
   },
   "engines": {
     "node": ">=18"
