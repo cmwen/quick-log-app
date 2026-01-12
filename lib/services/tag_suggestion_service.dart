@@ -7,9 +7,9 @@ class TagSuggestionService {
   // Constants for algorithm tuning
   static const double _suggestionThreshold = 0.1;
   static const double _earthRadiusMeters = 6371000.0;
-  
+
   /// Get suggested tags based on current context
-  /// 
+  ///
   /// Uses multiple factors:
   /// - Time of day (hour)
   /// - Day of week (0-6, Monday-Sunday)
@@ -205,12 +205,12 @@ class TagSuggestionService {
     final dLat = _degreesToRadians(lat2 - lat1);
     final dLon = _degreesToRadians(lon2 - lon1);
 
-    final a = 
+    final a =
         math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degreesToRadians(lat1)) *
-        math.cos(_degreesToRadians(lat2)) *
-        math.sin(dLon / 2) *
-        math.sin(dLon / 2);
+            math.cos(_degreesToRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
 
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 

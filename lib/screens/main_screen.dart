@@ -79,20 +79,21 @@ class _MainScreenState extends State<MainScreen> {
       // Get current location if available for location-based suggestions
       // Check if mounted before using context
       if (!mounted) return;
-      
+
       final settingsProvider = Provider.of<SettingsProvider>(
         context,
         listen: false,
       );
-      
+
       Position? currentPos;
       if (settingsProvider.locationEnabled) {
         try {
           final permission = await Geolocator.checkPermission();
           if (permission != LocationPermission.denied &&
               permission != LocationPermission.deniedForever) {
-            currentPos = await Geolocator.getCurrentPosition()
-                .timeout(const Duration(seconds: 5));
+            currentPos = await Geolocator.getCurrentPosition().timeout(
+              const Duration(seconds: 5),
+            );
           }
         } catch (e) {
           // Silently fail if location not available
@@ -267,9 +268,9 @@ class _MainScreenState extends State<MainScreen> {
                   Text(
                     'Suggested for You',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -277,8 +278,8 @@ class _MainScreenState extends State<MainScreen> {
               Text(
                 'Based on time, day, and location patterns',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 12),
               Wrap(

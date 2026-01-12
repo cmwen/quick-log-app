@@ -11,11 +11,36 @@ void main() {
     setUp(() {
       // Create sample tags
       allTags = [
-        LogTag(id: 'work', label: 'Work', category: TagCategory.activity, usageCount: 10),
-        LogTag(id: 'exercise', label: 'Exercise', category: TagCategory.activity, usageCount: 5),
-        LogTag(id: 'home', label: 'Home', category: TagCategory.location, usageCount: 8),
-        LogTag(id: 'happy', label: 'Happy', category: TagCategory.mood, usageCount: 6),
-        LogTag(id: 'cafe', label: 'Café', category: TagCategory.location, usageCount: 3),
+        LogTag(
+          id: 'work',
+          label: 'Work',
+          category: TagCategory.activity,
+          usageCount: 10,
+        ),
+        LogTag(
+          id: 'exercise',
+          label: 'Exercise',
+          category: TagCategory.activity,
+          usageCount: 5,
+        ),
+        LogTag(
+          id: 'home',
+          label: 'Home',
+          category: TagCategory.location,
+          usageCount: 8,
+        ),
+        LogTag(
+          id: 'happy',
+          label: 'Happy',
+          category: TagCategory.mood,
+          usageCount: 6,
+        ),
+        LogTag(
+          id: 'cafe',
+          label: 'Café',
+          category: TagCategory.location,
+          usageCount: 3,
+        ),
       ];
 
       // Create sample historical entries
@@ -80,21 +105,24 @@ void main() {
       expect(tagIds, contains('work'));
     });
 
-    test('should suggest tags based on time of day (evening exercise pattern)', () {
-      final now = DateTime.now();
-      final eveningTime = DateTime(now.year, now.month, now.day, 18, 0);
+    test(
+      'should suggest tags based on time of day (evening exercise pattern)',
+      () {
+        final now = DateTime.now();
+        final eveningTime = DateTime(now.year, now.month, now.day, 18, 0);
 
-      final suggestions = TagSuggestionService.getSuggestedTags(
-        historicalEntries: historicalEntries,
-        allTags: allTags,
-        currentTime: eveningTime,
-      );
+        final suggestions = TagSuggestionService.getSuggestedTags(
+          historicalEntries: historicalEntries,
+          allTags: allTags,
+          currentTime: eveningTime,
+        );
 
-      // Should suggest exercise-related tags for evening time
-      expect(suggestions, isNotEmpty);
-      final tagIds = suggestions.map((t) => t.id).toList();
-      expect(tagIds, contains('exercise'));
-    });
+        // Should suggest exercise-related tags for evening time
+        expect(suggestions, isNotEmpty);
+        final tagIds = suggestions.map((t) => t.id).toList();
+        expect(tagIds, contains('exercise'));
+      },
+    );
 
     test('should consider location proximity in suggestions', () {
       final now = DateTime.now();
@@ -185,17 +213,29 @@ void main() {
 
     test('should match day of week patterns', () {
       final now = DateTime.now();
-      
+
       // Create entries on same day of week
       final sameDayEntries = [
         LogEntry(
           id: 1,
-          createdAt: DateTime(now.year, now.month, now.day - 7, 10, 0), // Same day, last week
+          createdAt: DateTime(
+            now.year,
+            now.month,
+            now.day - 7,
+            10,
+            0,
+          ), // Same day, last week
           tags: ['work', 'cafe'],
         ),
         LogEntry(
           id: 2,
-          createdAt: DateTime(now.year, now.month, now.day - 14, 10, 30), // Same day, 2 weeks ago
+          createdAt: DateTime(
+            now.year,
+            now.month,
+            now.day - 14,
+            10,
+            30,
+          ), // Same day, 2 weeks ago
           tags: ['work'],
         ),
       ];
