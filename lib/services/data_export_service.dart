@@ -174,7 +174,6 @@ class DataExportService {
 
       int tagsImported = 0;
       int tagsUpdated = 0;
-      int tagsSkipped = 0;
 
       // Import tags
       if (data['tags'] != null) {
