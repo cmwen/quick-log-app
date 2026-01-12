@@ -10,6 +10,7 @@ A tag-first logging Android application for quick note-taking with automatic loc
 
 ### Core Functionality
 - **Tag-First Approach** - Select tags before writing, emphasizing quick categorization
+- **🆕 Smart Tag Suggestions** - AI-free intelligent suggestions based on time, day, and location patterns
 - **Smart Tag System** - Pre-populated tags across 5 categories (Activity, Location, Mood, People, Custom)
 - **Searchable Tags** - Easily find tags with search and category filters when creating entries
 - **Optional Location Tracking** - Toggle GPS tracking on/off (default: enabled)
@@ -95,13 +96,20 @@ flutter build appbundle --release
 
 ### Creating a Log Entry
 
-1. **Select Tags** - Tap on tag chips to select categories (Activity, Mood, Location, People)
+1. **Smart Suggestions** - When you open the app, you'll see personalized tag suggestions based on:
+   - Current time of day (e.g., "Work" at 9am if you usually work in the morning)
+   - Day of week (e.g., "Gym" on your usual workout days)
+   - Current location (e.g., "Café" when you're at your favorite coffee shop)
+   - Recent patterns (tags you've used lately are prioritized)
+2. **Select Tags** - Tap on suggested or recently used tag chips
    - Tap "See all tags" to open searchable tag selector
    - Use search field to find specific tags
    - Filter by category for easier navigation
-2. **Add Note (Optional)** - Write additional context in the note field
-3. **Location** - Location is captured automatically if enabled in Settings
-4. **Save** - Tap "Save Entry" to log your entry
+3. **Add Note (Optional)** - Write additional context in the note field
+4. **Location** - Location is captured automatically if enabled in Settings
+5. **Save** - Tap "Save Entry" to log your entry
+
+> **💡 Tip**: The more you use the app, the smarter the suggestions become! Use tags consistently for best results.
 
 ### Managing Tags
 
@@ -285,8 +293,10 @@ lib/
 - [x] Searchable tag selection
 - [x] Tag import/export for LLM customization
 - [x] Advanced entry filtering (tags, date range, location)
+- [x] 🆕 Smart tag suggestions based on context patterns (time, day, location)
 
-### Phase 4 (Planned)
+### Phase 4 🔄 In Progress
+- [x] 🆕 Intelligent tag suggestions without AI
 - [ ] Statistics and insights dashboard
 - [ ] Tag relationship suggestions
 - [ ] Export to additional formats (Markdown, PDF)
