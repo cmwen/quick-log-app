@@ -9,6 +9,7 @@ import 'package:quick_log_app/screens/map_screen.dart';
 import 'package:quick_log_app/screens/settings_screen.dart';
 import 'package:quick_log_app/widgets/tag_chip.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
+import 'package:quick_log_app/services/tag_suggestion_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
@@ -22,6 +23,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final TextEditingController _noteController = TextEditingController();
   final Set<String> _selectedTags = {};
+  List<LogTag> _suggestedTags = [];
   List<LogTag> _recentTags = [];
   List<LogTag> _allTags = [];
   bool _isLoading = true;
@@ -34,6 +36,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _loadTags();
+    _loadSuggestedTags();
     // Location will be fetched when needed based on settings
   }
 
@@ -59,6 +62,62 @@ class _MainScreenState extends State<MainScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error loading tags: $e')));
+      }
+    }
+  }
+
+  Future<void> _loadSuggestedTags() async {
+    try {
+      // Get historical entries for pattern analysis (last 90 days)
+      final now = DateTime.now();
+      final ninetyDaysAgo = now.subtract(const Duration(days: 90));
+      final historicalEntries = await DatabaseHelper.instance
+          .getEntriesByDateRange(ninetyDaysAgo, now);
+
+      final allTags = await DatabaseHelper.instance.getAllTags();
+
+      // Get current location if available for location-based suggestions
+      // Check if mounted before using context
+      if (!mounted) return;
+      
+      final settingsProvider = Provider.of<SettingsProvider>(
+        context,
+        listen: false,
+      );
+      
+      Position? currentPos;
+      if (settingsProvider.locationEnabled) {
+        try {
+          final permission = await Geolocator.checkPermission();
+          if (permission != LocationPermission.denied &&
+              permission != LocationPermission.deniedForever) {
+            currentPos = await Geolocator.getCurrentPosition()
+                .timeout(const Duration(seconds: 5));
+          }
+        } catch (e) {
+          // Silently fail if location not available
+        }
+      }
+
+      final suggested = TagSuggestionService.getSuggestedTags(
+        historicalEntries: historicalEntries,
+        allTags: allTags,
+        currentTime: DateTime.now(),
+        currentLatitude: currentPos?.latitude,
+        currentLongitude: currentPos?.longitude,
+      );
+
+      if (mounted) {
+        setState(() {
+          _suggestedTags = suggested;
+        });
+      }
+    } catch (e) {
+      // Silently fail - suggestions are optional
+      if (mounted) {
+        setState(() {
+          _suggestedTags = [];
+        });
       }
     }
   }
@@ -148,6 +207,7 @@ class _MainScreenState extends State<MainScreen> {
       });
 
       await _loadTags(); // Refresh to update usage counts
+      await _loadSuggestedTags(); // Refresh suggestions based on new entry
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -194,10 +254,53 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Smart Suggested Tags Section (context-aware)
+            if (_suggestedTags.isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Suggested for You',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Based on time, day, and location patterns',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _suggestedTags.map((tag) {
+                  return TagChipWidget(
+                    tag: tag,
+                    isSelected: _selectedTags.contains(tag.id),
+                    onTap: () => _toggleTag(tag.id),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+            ],
+
             // Recent Tags Section
             Text(
-              'Quick Select Tags',
-              style: Theme.of(context).textTheme.titleLarge,
+              'Recently Used Tags',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
             Wrap(
