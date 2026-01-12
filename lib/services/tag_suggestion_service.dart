@@ -4,6 +4,10 @@ import 'package:quick_log_app/models/log_entry.dart';
 
 /// Service for providing intelligent tag suggestions based on user patterns
 class TagSuggestionService {
+  // Constants for algorithm tuning
+  static const double _suggestionThreshold = 0.1;
+  static const double _earthRadiusMeters = 6371000.0;
+  
   /// Get suggested tags based on current context
   /// 
   /// Uses multiple factors:
@@ -59,9 +63,8 @@ class TagSuggestionService {
       });
 
     // Return tags with significant scores (above threshold)
-    final threshold = 0.1;
     return sortedTags
-        .where((tag) => (tagScores[tag.id] ?? 0.0) > threshold)
+        .where((tag) => (tagScores[tag.id] ?? 0.0) > _suggestionThreshold)
         .take(8) // Return up to 8 suggestions
         .toList();
   }
@@ -148,12 +151,12 @@ class TagSuggestionService {
     final diff = (day1 - day2).abs();
     if (diff == 1 || diff == 6) return 0.5; // Adjacent or wrap-around
 
-    // Weekend pattern (Saturday = 6, Sunday = 7)
-    final isWeekend1 = day1 >= 6;
-    final isWeekend2 = day2 >= 6;
+    // Weekend pattern (Saturday = 6, Sunday = 7 in Dart DateTime.weekday)
+    final isWeekend1 = day1 == 6 || day1 == 7;
+    final isWeekend2 = day2 == 6 || day2 == 7;
     if (isWeekend1 && isWeekend2) return 0.4; // Both weekends
 
-    // Weekday pattern (Monday-Friday)
+    // Weekday pattern (Monday-Friday = 1-5)
     if (!isWeekend1 && !isWeekend2) return 0.2; // Both weekdays
 
     return 0.0;
@@ -199,8 +202,6 @@ class TagSuggestionService {
     double lat2,
     double lon2,
   ) {
-    const earthRadius = 6371000.0; // meters
-
     final dLat = _degreesToRadians(lat2 - lat1);
     final dLon = _degreesToRadians(lon2 - lon1);
 
@@ -213,7 +214,7 @@ class TagSuggestionService {
 
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
-    return earthRadius * c;
+    return _earthRadiusMeters * c;
   }
 
   static double _degreesToRadians(double degrees) {
