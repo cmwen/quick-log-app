@@ -185,7 +185,6 @@ void main() {
 
     test('should match day of week patterns', () {
       final now = DateTime.now();
-      final currentWeekday = now.weekday;
       
       // Create entries on same day of week
       final sameDayEntries = [

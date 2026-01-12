@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:quick_log_app/models/log_tag.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 
@@ -204,53 +205,19 @@ class TagSuggestionService {
     final dLon = _degreesToRadians(lon2 - lon1);
 
     final a = 
-        _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_degreesToRadians(lat1)) *
-        _cos(_degreesToRadians(lat2)) *
-        _sin(dLon / 2) *
-        _sin(dLon / 2);
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degreesToRadians(lat1)) *
+        math.cos(_degreesToRadians(lat2)) *
+        math.sin(dLon / 2) *
+        math.sin(dLon / 2);
 
-    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
     return earthRadius * c;
   }
 
   static double _degreesToRadians(double degrees) {
-    return degrees * 3.141592653589793 / 180.0;
-  }
-
-  static double _sin(double radians) {
-    return radians - 
-        (radians * radians * radians) / 6 +
-        (radians * radians * radians * radians * radians) / 120;
-  }
-
-  static double _cos(double radians) {
-    return 1 - 
-        (radians * radians) / 2 +
-        (radians * radians * radians * radians) / 24;
-  }
-
-  static double _sqrt(double value) {
-    if (value <= 0) return 0;
-    double guess = value / 2;
-    for (int i = 0; i < 10; i++) {
-      guess = (guess + value / guess) / 2;
-    }
-    return guess;
-  }
-
-  static double _atan2(double y, double x) {
-    // Simple atan2 approximation
-    if (x == 0) {
-      if (y > 0) return 3.141592653589793 / 2;
-      if (y < 0) return -3.141592653589793 / 2;
-      return 0;
-    }
-    final atan = y / x;
-    if (x > 0) return atan;
-    if (y >= 0) return atan + 3.141592653589793;
-    return atan - 3.141592653589793;
+    return degrees * math.pi / 180.0;
   }
 
   /// Calculate recency score - more recent entries are more relevant
