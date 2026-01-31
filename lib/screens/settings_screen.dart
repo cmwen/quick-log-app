@@ -22,10 +22,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadPackageInfo() async {
-    final packageInfo = await PackageInfo.fromPlatform();
-    setState(() {
-      _appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
-    });
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          final version = packageInfo.version.isNotEmpty
+              ? packageInfo.version
+              : 'Unknown';
+          final buildNumber = packageInfo.buildNumber.isNotEmpty
+              ? packageInfo.buildNumber
+              : '0';
+          _appVersion = '$version+$buildNumber';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _appVersion = 'Unknown';
+        });
+      }
+    }
   }
 
   @override
