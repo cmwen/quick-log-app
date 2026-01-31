@@ -3,9 +3,55 @@ import 'package:provider/provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/services/data_export_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _appVersion = 'Unknown';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          final version = packageInfo.version.isNotEmpty
+              ? packageInfo.version
+              : null;
+          final buildNumber =
+              packageInfo.buildNumber.isNotEmpty &&
+                  packageInfo.buildNumber != '0'
+              ? packageInfo.buildNumber
+              : null;
+
+          if (version != null) {
+            _appVersion = buildNumber != null
+                ? '$version+$buildNumber'
+                : version;
+          } else {
+            _appVersion = 'Unknown';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _appVersion = 'Unknown';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +386,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: const Text('Quick Log'),
-          subtitle: const Text('Version 1.0.0'),
+          subtitle: Text('Version $_appVersion'),
           onTap: () => _showAboutDialog(context),
         ),
       ],
@@ -351,7 +397,7 @@ class SettingsScreen extends StatelessWidget {
     showAboutDialog(
       context: context,
       applicationName: 'Quick Log',
-      applicationVersion: '1.0.0',
+      applicationVersion: _appVersion,
       applicationIcon: Container(
         width: 64,
         height: 64,

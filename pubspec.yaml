@@ -54,6 +54,7 @@ dependencies:
 
   # Settings/Preferences
   shared_preferences: ^2.5.4
+  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:
