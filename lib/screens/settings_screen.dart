@@ -3,9 +3,30 @@ import 'package:provider/provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/services/data_export_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _appVersion = 'Loading...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +361,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: const Text('Quick Log'),
-          subtitle: const Text('Version 1.0.0'),
+          subtitle: Text('Version $_appVersion'),
           onTap: () => _showAboutDialog(context),
         ),
       ],
@@ -351,7 +372,7 @@ class SettingsScreen extends StatelessWidget {
     showAboutDialog(
       context: context,
       applicationName: 'Quick Log',
-      applicationVersion: '1.0.0',
+      applicationVersion: _appVersion,
       applicationIcon: Container(
         width: 64,
         height: 64,

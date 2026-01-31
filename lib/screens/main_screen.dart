@@ -37,7 +37,16 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _loadTags();
     _loadSuggestedTags();
-    // Location will be fetched when needed based on settings
+    // Fetch location automatically if location tracking is enabled
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settingsProvider = Provider.of<SettingsProvider>(
+        context,
+        listen: false,
+      );
+      if (settingsProvider.locationEnabled) {
+        _getCurrentLocation();
+      }
+    });
   }
 
   @override
