@@ -13,7 +13,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _appVersion = 'Loading...';
+  String _appVersion = 'Unknown';
 
   @override
   void initState() {
@@ -28,11 +28,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           final version = packageInfo.version.isNotEmpty
               ? packageInfo.version
-              : 'Unknown';
-          final buildNumber = packageInfo.buildNumber.isNotEmpty
+              : null;
+          final buildNumber = packageInfo.buildNumber.isNotEmpty &&
+                  packageInfo.buildNumber != '0'
               ? packageInfo.buildNumber
-              : '0';
-          _appVersion = '$version+$buildNumber';
+              : null;
+
+          if (version != null) {
+            _appVersion = buildNumber != null ? '$version+$buildNumber' : version;
+          } else {
+            _appVersion = 'Unknown';
+          }
         });
       }
     } catch (e) {
