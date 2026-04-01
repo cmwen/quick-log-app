@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/services/data_export_service.dart';
@@ -158,6 +159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildPrivacySection(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
+    final locationProvider = Provider.of<LocationTrackingProvider>(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,12 +178,143 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Enable Location Tracking'),
           subtitle: const Text('Capture GPS location when creating entries'),
           value: settingsProvider.locationEnabled,
-          onChanged: (value) {
-            settingsProvider.setLocationEnabled(value);
-          },
+          onChanged: (value) => _handleLocationTrackingChanged(
+            context,
+            settingsProvider,
+            locationProvider,
+            value,
+          ),
         ),
+        SwitchListTile(
+          secondary: const Icon(Icons.run_circle_outlined),
+          title: const Text('Track in Background'),
+          subtitle: const Text(
+            'Keep updating your current position when the app is not visible',
+          ),
+          value: settingsProvider.backgroundTrackingEnabled,
+          onChanged: settingsProvider.locationEnabled
+              ? (value) => _handleBackgroundTrackingChanged(
+                  context,
+                  settingsProvider,
+                  locationProvider,
+                  value,
+                )
+              : null,
+        ),
+        SwitchListTile(
+          secondary: const Icon(Icons.battery_saver_outlined),
+          title: const Text('Battery Saver for GPS'),
+          subtitle: const Text(
+            'Use fewer location updates to reduce battery consumption',
+          ),
+          value: settingsProvider.batterySaverEnabled,
+          onChanged: settingsProvider.locationEnabled
+              ? (value) async {
+                  await settingsProvider.setBatterySaverEnabled(value);
+                }
+              : null,
+        ),
+        ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: const Text('Location Status'),
+          subtitle: Text(
+            locationProvider.lastError ?? locationProvider.statusMessage,
+          ),
+        ),
+        if (settingsProvider.backgroundTrackingEnabled)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              settingsProvider.batterySaverEnabled
+                  ? 'Battery saver keeps background GPS low-power by reducing accuracy and update frequency.'
+                  : 'Balanced mode refreshes more often for better position accuracy, which uses more battery.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        if (settingsProvider.backgroundTrackingEnabled)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              'Android may require "Allow all the time" location access for background tracking.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  Future<void> _handleLocationTrackingChanged(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    LocationTrackingProvider locationProvider,
+    bool enabled,
+  ) async {
+    if (!enabled) {
+      await settingsProvider.setLocationEnabled(false);
+      return;
+    }
+
+    final granted = await locationProvider.requestTrackingPermission(
+      requireBackground: settingsProvider.backgroundTrackingEnabled,
+    );
+
+    if (granted) {
+      await settingsProvider.setLocationEnabled(true);
+      return;
+    }
+
+    await settingsProvider.setLocationEnabled(false);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            locationProvider.lastError ??
+                'Location permission is required to enable GPS tracking.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleBackgroundTrackingChanged(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    LocationTrackingProvider locationProvider,
+    bool enabled,
+  ) async {
+    if (!enabled) {
+      await settingsProvider.setBackgroundTrackingEnabled(false);
+      return;
+    }
+
+    final granted = await locationProvider.requestTrackingPermission(
+      requireBackground: true,
+      openSettingsForBackground: true,
+    );
+
+    if (granted) {
+      await settingsProvider.setBackgroundTrackingEnabled(true);
+      return;
+    }
+
+    await settingsProvider.setBackgroundTrackingEnabled(false);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            locationProvider.lastError ??
+                'Grant background location in Android settings to keep tracking active.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   Widget _buildDataSection(BuildContext context) {

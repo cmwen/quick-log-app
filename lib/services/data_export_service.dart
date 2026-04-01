@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:quick_log_app/data/database_helper.dart';
 import 'package:quick_log_app/models/log_entry.dart';
@@ -86,14 +85,10 @@ class DataExportService {
 
   /// Share exported data as a file
   Future<void> shareJsonExport() async {
-    final jsonData = await exportToJson();
-    final tempDir = await getTemporaryDirectory();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final file = File('${tempDir.path}/quick_log_export_$timestamp.json');
-    await file.writeAsString(jsonData);
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
+    await _shareExportData(
+      content: await exportToJson(),
+      fileName: 'quick_log_export.json',
+      mimeType: 'application/json',
       subject: 'Quick Log Export',
       text: 'Quick Log data export',
     );
@@ -101,14 +96,10 @@ class DataExportService {
 
   /// Share exported data as CSV
   Future<void> shareCsvExport() async {
-    final csvData = await exportToCsv();
-    final tempDir = await getTemporaryDirectory();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final file = File('${tempDir.path}/quick_log_export_$timestamp.csv');
-    await file.writeAsString(csvData);
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
+    await _shareExportData(
+      content: await exportToCsv(),
+      fileName: 'quick_log_export.csv',
+      mimeType: 'text/csv',
       subject: 'Quick Log Export',
       text: 'Quick Log data export (CSV)',
     );
@@ -143,16 +134,29 @@ class DataExportService {
 
   /// Share tags export as JSON
   Future<void> shareTagsExport() async {
-    final jsonData = await exportTagsToJson();
-    final tempDir = await getTemporaryDirectory();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final file = File('${tempDir.path}/quick_log_tags_$timestamp.json');
-    await file.writeAsString(jsonData);
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
+    await _shareExportData(
+      content: await exportTagsToJson(),
+      fileName: 'quick_log_tags.json',
+      mimeType: 'application/json',
       subject: 'Quick Log Tags Export',
       text: 'Quick Log tags export - customize with LLM and re-import',
+    );
+  }
+
+  Future<void> _shareExportData({
+    required String content,
+    required String fileName,
+    required String mimeType,
+    required String subject,
+    required String text,
+  }) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(utf8.encode(content), mimeType: mimeType)],
+        fileNameOverrides: [fileName],
+        subject: subject,
+        text: text,
+      ),
     );
   }
 

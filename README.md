@@ -2,16 +2,19 @@
 
 Official website: https://cmwen.github.io/quick-log-app
 
-An Android-only tag-first logging application for quick note-taking with location tracking. Built with Flutter for optimal Android performance.
+An Android-first tag-based logging app for quick note-taking with smart tag suggestions, optional location tracking, map history, and local import/export. Built with Flutter.
 
 ## ✨ Features
 
-- 🏷️ **Tag-First Logging**: Quickly categorize entries with customizable tags
-- 📍 **Location Tracking**: Automatic GPS location capture with geocoding
-- 📝 **Optional Notes**: Add detailed notes to any entry
-- 🗄️ **Local Database**: All data stored securely on-device with SQLite
-- 🎨 **Material Design 3**: Beautiful, modern Android UI
-- 🌙 **Dark Mode**: Automatic theme switching based on system settings
+- 🏷️ **Tag-First Logging**: Create entries by selecting tags first, then optionally adding notes
+- 💡 **Smart Tag Suggestions**: Suggestions adapt to your time, day, and location patterns
+- 🔎 **Searchable Tag Picker**: Browse, search, and filter tags by category
+- 📍 **Optional Location Tracking**: Capture location labels and coordinates when enabled
+- 🗺️ **Map View**: Review entries with location data on an interactive map
+- 🧰 **Entry Management**: Filter, inspect, edit, and delete saved entries
+- 📤 **Import / Export**: Export all data to JSON/CSV and import JSON backups
+- ⚙️ **Settings**: Theme selection, location toggle, background tracking, and GPS battery saver
+- 🗄️ **Local-Only Storage**: Entries and tags stay on-device in SQLite
 
 ## 🚀 Quick Start
 
@@ -61,28 +64,40 @@ The app requires the following permissions:
 
 | Permission | Purpose |
 |------------|---------|
-| `ACCESS_FINE_LOCATION` | GPS location for accurate tracking |
-| `ACCESS_COARSE_LOCATION` | Network-based location fallback |
-| `INTERNET` | Geocoding service for location names |
+| `ACCESS_FINE_LOCATION` | Precise GPS location for entries and map data |
+| `ACCESS_COARSE_LOCATION` | Lower-accuracy location fallback |
+| `ACCESS_BACKGROUND_LOCATION` | Optional background tracking when enabled in Settings |
+| `FOREGROUND_SERVICE` | Required for Android foreground tracking service |
+| `FOREGROUND_SERVICE_LOCATION` | Required for foreground location updates on newer Android versions |
+| `INTERNET` | Reverse geocoding and OpenStreetMap tiles |
 
-Users will be prompted to grant location permissions on first use.
+The app works without location access, but map features and automatic location capture require permission. Background tracking only activates if you enable it in **Settings** and grant Android's **Allow all the time** location permission.
 
 ## 🏗️ Project Structure
 
 ```
 ├── lib/
-│   ├── main.dart              # App entry point
+│   ├── main.dart                   # App entry point
 │   ├── data/
-│   │   └── database_helper.dart  # SQLite database operations
+│   │   └── database_helper.dart    # SQLite database operations
 │   ├── models/
-│   │   ├── log_entry.dart     # Entry data model
-│   │   └── log_tag.dart       # Tag data model
+│   │   ├── log_entry.dart          # Entry data model
+│   │   └── log_tag.dart            # Tag data model
+│   ├── providers/
+│   │   ├── location_tracking_provider.dart
+│   │   ├── settings_provider.dart
+│   │   └── theme_provider.dart
 │   ├── screens/
-│   │   ├── main_screen.dart   # Main logging screen
-│   │   ├── entries_screen.dart # View past entries
-│   │   └── tags_screen.dart   # Manage tags
+│   │   ├── main_screen.dart        # Record screen with suggestions
+│   │   ├── entries_screen.dart     # View, filter, edit, delete entries
+│   │   ├── tags_screen.dart        # Manage tags
+│   │   ├── map_screen.dart         # Location history map
+│   │   └── settings_screen.dart    # Theme, privacy, export/import
+│   ├── services/
+│   │   ├── data_export_service.dart
+│   │   └── tag_suggestion_service.dart
 │   └── widgets/
-│       └── tag_chip.dart      # Reusable tag widget
+│       └── tag_chip.dart           # Reusable tag widget
 ├── android/                   # Android platform configuration
 ├── test/                      # Unit and widget tests
 └── pubspec.yaml              # Dependencies
@@ -131,6 +146,7 @@ git tag v1.0.0 && git push --tags
 
 ## 📚 Documentation
 
+- [QUICK_LOG_README.md](QUICK_LOG_README.md) - Detailed user guide and feature walkthrough
 - [GETTING_STARTED.md](GETTING_STARTED.md) - Detailed setup guide
 - [APP_CUSTOMIZATION.md](APP_CUSTOMIZATION.md) - Customization options
 - [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md) - Build performance details
@@ -141,13 +157,17 @@ git tag v1.0.0 && git push --tags
 
 | Package | Purpose |
 |---------|---------|
-| `provider` | State management |
+| `provider` | App settings and theme state |
 | `sqflite` | Local SQLite database |
-| `path_provider` | File system paths |
-| `geolocator` | GPS location services |
-| `geocoding` | Reverse geocoding |
+| `path_provider` / `path` | Local file and database paths |
+| `geolocator` | GPS location services and background updates |
+| `geocoding` | Reverse geocoding for human-readable locations |
+| `flutter_map` / `latlong2` | Map rendering with OpenStreetMap |
+| `share_plus` / `file_picker` | Exporting and importing app data |
+| `shared_preferences` | Persisting settings |
+| `package_info_plus` | App version display |
 | `intl` | Date/time formatting |
-| `flutter_chips_input` | Tag input UI |
+| `flutter_chips_input` | Tag selection UI |
 
 ## 🤖 AI-Powered Development
 

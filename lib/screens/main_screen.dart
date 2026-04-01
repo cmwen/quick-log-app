@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/models/log_tag.dart';
 import 'package:quick_log_app/data/database_helper.dart';
+import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/screens/entries_screen.dart';
 import 'package:quick_log_app/screens/tags_screen.dart';
 import 'package:quick_log_app/screens/map_screen.dart';
@@ -10,8 +11,6 @@ import 'package:quick_log_app/screens/settings_screen.dart';
 import 'package:quick_log_app/widgets/tag_chip.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/services/tag_suggestion_service.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -27,9 +26,6 @@ class _MainScreenState extends State<MainScreen> {
   List<LogTag> _recentTags = [];
   List<LogTag> _allTags = [];
   bool _isLoading = true;
-  Position? _currentPosition;
-  String? _locationLabel;
-  bool _isGettingLocation = false;
   int _selectedIndex = 0;
 
   @override
@@ -37,16 +33,6 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _loadTags();
     _loadSuggestedTags();
-    // Fetch location automatically if location tracking is enabled
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final settingsProvider = Provider.of<SettingsProvider>(
-        context,
-        listen: false,
-      );
-      if (settingsProvider.locationEnabled) {
-        _getCurrentLocation();
-      }
-    });
   }
 
   @override
@@ -93,19 +79,16 @@ class _MainScreenState extends State<MainScreen> {
         context,
         listen: false,
       );
+      final locationProvider = Provider.of<LocationTrackingProvider>(
+        context,
+        listen: false,
+      );
 
-      Position? currentPos;
-      if (settingsProvider.locationEnabled) {
+      if (settingsProvider.locationEnabled && !locationProvider.hasLocation) {
         try {
-          final permission = await Geolocator.checkPermission();
-          if (permission != LocationPermission.denied &&
-              permission != LocationPermission.deniedForever) {
-            currentPos = await Geolocator.getCurrentPosition().timeout(
-              const Duration(seconds: 5),
-            );
-          }
-        } catch (e) {
-          // Silently fail if location not available
+          await locationProvider.refreshLocation();
+        } catch (_) {
+          // Suggestions are optional; keep the UI usable if GPS is unavailable.
         }
       }
 
@@ -113,8 +96,8 @@ class _MainScreenState extends State<MainScreen> {
         historicalEntries: historicalEntries,
         allTags: allTags,
         currentTime: DateTime.now(),
-        currentLatitude: currentPos?.latitude,
-        currentLongitude: currentPos?.longitude,
+        currentLatitude: locationProvider.latitude,
+        currentLongitude: locationProvider.longitude,
       );
 
       if (mounted) {
@@ -129,54 +112,6 @@ class _MainScreenState extends State<MainScreen> {
           _suggestedTags = [];
         });
       }
-    }
-  }
-
-  Future<void> _getCurrentLocation({bool force = false}) async {
-    // Check if location is enabled in settings
-    final settingsProvider = Provider.of<SettingsProvider>(
-      context,
-      listen: false,
-    );
-    if (!settingsProvider.locationEnabled && !force) {
-      setState(() {
-        _currentPosition = null;
-        _locationLabel = null;
-        _isGettingLocation = false;
-      });
-      return;
-    }
-
-    setState(() => _isGettingLocation = true);
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        final requested = await Geolocator.requestPermission();
-        if (requested == LocationPermission.denied) {
-          setState(() => _isGettingLocation = false);
-          return;
-        }
-      }
-
-      final position = await Geolocator.getCurrentPosition();
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      setState(() {
-        _currentPosition = position;
-        if (placemarks.isNotEmpty) {
-          final place = placemarks.first;
-          _locationLabel = [
-            place.name,
-            place.locality,
-          ].where((e) => e != null && e.isNotEmpty).join(', ');
-        }
-        _isGettingLocation = false;
-      });
-    } catch (e) {
-      setState(() => _isGettingLocation = false);
     }
   }
 
@@ -198,13 +133,26 @@ class _MainScreenState extends State<MainScreen> {
       return;
     }
 
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
+    final locationProvider = Provider.of<LocationTrackingProvider>(
+      context,
+      listen: false,
+    );
+
+    if (settingsProvider.locationEnabled && !locationProvider.hasLocation) {
+      await locationProvider.refreshLocation();
+    }
+
     final entry = LogEntry(
       createdAt: DateTime.now(),
       note: _noteController.text.isEmpty ? null : _noteController.text,
       tags: _selectedTags.toList(),
-      latitude: _currentPosition?.latitude,
-      longitude: _currentPosition?.longitude,
-      locationLabel: _locationLabel,
+      latitude: locationProvider.latitude,
+      longitude: locationProvider.longitude,
+      locationLabel: locationProvider.locationLabel,
     );
 
     try {
@@ -240,15 +188,11 @@ class _MainScreenState extends State<MainScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => _TagSearchModal(
         allTags: _allTags,
         selectedTags: _selectedTags,
-        onTagToggle: (tagId) {
-          setState(() {
-            _toggleTag(tagId);
-          });
-          Navigator.pop(context);
-        },
+        onTagToggle: _toggleTag,
       ),
     );
   }
@@ -258,8 +202,8 @@ class _MainScreenState extends State<MainScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return Consumer<SettingsProvider>(
-      builder: (context, settingsProvider, child) => SingleChildScrollView(
+    return Consumer2<SettingsProvider, LocationTrackingProvider>(
+      builder: (context, settingsProvider, locationProvider, child) => SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,31 +322,32 @@ class _MainScreenState extends State<MainScreen> {
               child: ListTile(
                 leading: Icon(
                   settingsProvider.locationEnabled
-                      ? (_currentPosition != null
+                      ? (locationProvider.hasLocation
                             ? Icons.location_on
                             : Icons.location_searching)
                       : Icons.location_disabled,
                   color:
                       settingsProvider.locationEnabled &&
-                          _currentPosition != null
+                          locationProvider.hasLocation
                       ? Theme.of(context).colorScheme.primary
                       : null,
                 ),
                 title: Text(
                   settingsProvider.locationEnabled
-                      ? (_locationLabel ?? 'Location not available')
+                      ? (locationProvider.locationLabel ??
+                            'Location not available')
                       : 'Location tracking disabled',
                 ),
                 subtitle: settingsProvider.locationEnabled
-                    ? (_currentPosition != null
+                    ? (locationProvider.hasLocation
                           ? Text(
-                              'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
-                              'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                              'Lat: ${locationProvider.latitude!.toStringAsFixed(4)}, '
+                              'Lon: ${locationProvider.longitude!.toStringAsFixed(4)}',
                             )
-                          : const Text('Tap refresh to get location'))
+                          : Text(locationProvider.statusMessage))
                     : const Text('Enable in Settings to track location'),
                 trailing: settingsProvider.locationEnabled
-                    ? (_isGettingLocation
+                    ? (locationProvider.isRefreshing
                           ? const SizedBox(
                               width: 24,
                               height: 24,
@@ -410,11 +355,25 @@ class _MainScreenState extends State<MainScreen> {
                             )
                           : IconButton(
                               icon: const Icon(Icons.refresh),
-                              onPressed: () => _getCurrentLocation(force: true),
+                              onPressed: () => locationProvider.refreshLocation(
+                                promptForPermission: true,
+                              ),
                             ))
                     : null,
               ),
             ),
+            if (settingsProvider.locationEnabled &&
+                settingsProvider.backgroundTrackingEnabled) ...[
+              const SizedBox(height: 8),
+              Text(
+                settingsProvider.batterySaverEnabled
+                    ? 'Background mode uses low-power updates every few minutes to reduce battery drain.'
+                    : 'Background mode uses balanced updates more often for fresher GPS data.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
 
             // Save Button
             const SizedBox(height: 32),
@@ -561,10 +520,10 @@ class _TagSearchModalState extends State<_TagSearchModal> {
       maxChildSize: 0.9,
       minChildSize: 0.5,
       expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          // Header
-          Container(
+        builder: (context, scrollController) => Column(
+          children: [
+            // Header
+            Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
@@ -578,7 +537,7 @@ class _TagSearchModalState extends State<_TagSearchModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Select Tags',
+                      'Select Tags (${widget.selectedTags.length})',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     IconButton(
@@ -681,15 +640,28 @@ class _TagSearchModalState extends State<_TagSearchModal> {
                           '${tag.category.name} • Used ${tag.usageCount} times',
                         ),
                         value: isSelected,
-                        onChanged: (value) {
+                        onChanged: (_) => setState(() {
                           widget.onTagToggle(tag.id);
-                        },
+                        }),
                       );
                     },
                   ),
-          ),
-        ],
-      ),
-    );
+           ),
+           SafeArea(
+             top: false,
+             child: Padding(
+               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+               child: SizedBox(
+                 width: double.infinity,
+                 child: FilledButton(
+                   onPressed: () => Navigator.pop(context),
+                   child: const Text('Done'),
+                 ),
+               ),
+             ),
+           ),
+         ],
+       ),
+     );
   }
 }

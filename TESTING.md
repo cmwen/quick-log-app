@@ -29,7 +29,7 @@ flutter test --verbose
 flutter test test/widget_test.dart
 
 # Run tests matching pattern
-flutter test --plain-name "counter"
+flutter test --plain-name "Quick Log app starts"
 ```
 
 ### Watch Mode
@@ -69,24 +69,14 @@ Example:
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:min_flutter_template/main.dart';
+import 'package:quick_log_app/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Quick Log app starts', (WidgetTester tester) async {
+    await tester.pumpWidget(const QuickLogRoot());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Quick Log'), findsOneWidget);
   });
 }
 ```
@@ -105,7 +95,7 @@ Example:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:min_flutter_template/main.dart' as app;
+import 'package:quick_log_app/main.dart' as app;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -114,11 +104,10 @@ void main() {
     app.main();
     await tester.pumpAndSettle();
 
-    // Test your app flow
-    expect(find.text('0'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.text('Quick Log'), findsOneWidget);
+    await tester.tap(find.text('See all tags'));
     await tester.pumpAndSettle();
-    expect(find.text('1'), findsOneWidget);
+    expect(find.textContaining('Select Tags'), findsOneWidget);
   });
 }
 ```
