@@ -159,6 +159,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
       text: entry.note ?? '',
     );
     final Set<String> selectedTags = Set.from(entry.tags);
+    final canLeaveTagsEmpty = entry.hasLocation;
 
     final result = await showDialog<bool>(
       context: context,
@@ -220,10 +221,12 @@ class _EntriesScreenState extends State<EntriesScreen> {
     );
 
     if (result == true) {
-      if (selectedTags.isEmpty) {
+      if (selectedTags.isEmpty && !canLeaveTagsEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select at least one tag')),
+            const SnackBar(
+              content: Text('Please select at least one tag or keep location'),
+            ),
           );
         }
         return;
@@ -280,23 +283,58 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Tags
               Text('Tags', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: entry.tags.map((tagId) {
-                  final tag = _tagMap[tagId];
-                  return Chip(
-                    label: Text(tag?.label ?? tagId),
-                    avatar: Icon(
-                      Icons.label,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSecondaryContainer,
-                    ),
-                  );
-                }).toList(),
-              ),
+              if (entry.tags.isEmpty)
+                Text(
+                  'No tags yet',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  children: entry.tags.map((tagId) {
+                    final tag = _tagMap[tagId];
+                    return Chip(
+                      label: Text(tag?.label ?? tagId),
+                      avatar: Icon(
+                        Icons.label,
+                        size: 16,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+              if (entry.isAutoTracked) ...[
+                const SizedBox(height: 24),
+                Text(
+                  'Visit Detection',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.route_outlined),
+                  title: Text(
+                    entry.reviewStatus == EntryReviewStatus.needsReview
+                        ? 'Needs review'
+                        : 'Confirmed visit',
+                  ),
+                  subtitle: Text(
+                    [
+                      if (entry.visitStartedAt != null)
+                        'Started ${DateFormat('MMM d, y • h:mm a').format(entry.visitStartedAt!)}',
+                      if (entry.visitEndedAt != null)
+                        'Ended ${DateFormat('h:mm a').format(entry.visitEndedAt!)}',
+                      if (entry.visitDurationMinutes != null)
+                        '${entry.visitDurationMinutes} min stop',
+                    ].join(' • '),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
 
               // Note
               if (entry.note != null && entry.note!.isNotEmpty) ...[
@@ -707,18 +745,34 @@ class _EntriesScreenState extends State<EntriesScreen> {
                                   Expanded(
                                     child: Wrap(
                                       spacing: 4,
-                                      children: entry.tags.take(3).map((tagId) {
-                                        final tag = _tagMap[tagId];
-                                        return Chip(
-                                          label: Text(
-                                            tag?.label ?? tagId,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          visualDensity: VisualDensity.compact,
-                                        );
-                                      }).toList(),
+                                      children: entry.tags.isEmpty
+                                          ? [
+                                              Chip(
+                                                label: Text(
+                                                  entry.isAutoTracked
+                                                      ? 'Auto visit'
+                                                      : 'Location only',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                              ),
+                                            ]
+                                          : entry.tags.take(3).map((tagId) {
+                                              final tag = _tagMap[tagId];
+                                              return Chip(
+                                                label: Text(
+                                                  tag?.label ?? tagId,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                              );
+                                            }).toList(),
                                     ),
                                   ),
                                   if (entry.tags.length > 3)
@@ -760,6 +814,13 @@ class _EntriesScreenState extends State<EntriesScreen> {
                                           ),
                                         ),
                                       ],
+                                    ),
+                                  if (entry.isAutoTracked)
+                                    Text(
+                                      entry.reviewStatus ==
+                                              EntryReviewStatus.needsReview
+                                          ? 'Auto-detected stop pending review'
+                                          : 'Auto-detected stop',
                                     ),
                                 ],
                               ),

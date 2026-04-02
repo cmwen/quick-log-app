@@ -6,6 +6,7 @@ import 'package:quick_log_app/models/log_tag.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+  static const int _dbVersion = 2;
 
   DatabaseHelper._init();
 
@@ -19,7 +20,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: _dbVersion,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -40,8 +46,17 @@ class DatabaseHelper {
         tags TEXT NOT NULL,
         latitude REAL,
         longitude REAL,
-        locationLabel TEXT
+        locationLabel TEXT,
+        source TEXT NOT NULL DEFAULT 'manual',
+        reviewStatus TEXT NOT NULL DEFAULT 'none',
+        visitStartedAt INTEGER,
+        visitEndedAt INTEGER,
+        visitDurationMinutes INTEGER
       )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_entries_createdAt ON entries(createdAt DESC)
     ''');
 
     // Seed default tags
@@ -79,6 +94,25 @@ class DatabaseHelper {
 
     for (var tag in defaultTags) {
       await db.insert('tags', tag.toMap());
+    }
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        "ALTER TABLE entries ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'",
+      );
+      await db.execute(
+        "ALTER TABLE entries ADD COLUMN reviewStatus TEXT NOT NULL DEFAULT 'none'",
+      );
+      await db.execute('ALTER TABLE entries ADD COLUMN visitStartedAt INTEGER');
+      await db.execute('ALTER TABLE entries ADD COLUMN visitEndedAt INTEGER');
+      await db.execute(
+        'ALTER TABLE entries ADD COLUMN visitDurationMinutes INTEGER',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_entries_createdAt ON entries(createdAt DESC)',
+      );
     }
   }
 
@@ -141,6 +175,23 @@ class DatabaseHelper {
     final db = await database;
     final result = await db.query('entries', orderBy: 'createdAt DESC');
     return result.map((map) => LogEntry.fromMap(map)).toList();
+  }
+
+  Future<LogEntry?> getLatestAutoVisitEntry() async {
+    final db = await database;
+    final result = await db.query(
+      'entries',
+      where: 'source = ?',
+      whereArgs: [EntrySource.autoVisit.name],
+      orderBy: 'createdAt DESC',
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return LogEntry.fromMap(result.first);
   }
 
   Future<List<LogEntry>> getEntriesByDateRange(

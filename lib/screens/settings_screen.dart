@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
@@ -160,6 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildPrivacySection(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final locationProvider = Provider.of<LocationTrackingProvider>(context);
+    final autoVisitProvider = Provider.of<AutoVisitProvider>(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,6 +204,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : null,
         ),
         SwitchListTile(
+          secondary: const Icon(Icons.flight_takeoff_outlined),
+          title: const Text('Travel Mode'),
+          subtitle: const Text(
+            'Tune tracking for longer stops and travel-style visit review',
+          ),
+          value: settingsProvider.travelModeEnabled,
+          onChanged: settingsProvider.locationEnabled
+              ? (value) async {
+                  await settingsProvider.setTravelModeEnabled(value);
+                }
+              : null,
+        ),
+        SwitchListTile(
+          secondary: const Icon(Icons.timeline_outlined),
+          title: const Text('Auto-log Visited Places'),
+          subtitle: const Text(
+            'Create reviewable visit entries automatically after meaningful stops',
+          ),
+          value: settingsProvider.autoVisitLoggingEnabled,
+          onChanged: settingsProvider.locationEnabled
+              ? (value) => _handleAutoVisitLoggingChanged(
+                  context,
+                  settingsProvider,
+                  locationProvider,
+                  value,
+                )
+              : null,
+        ),
+        SwitchListTile(
           secondary: const Icon(Icons.battery_saver_outlined),
           title: const Text('Battery Saver for GPS'),
           subtitle: const Text(
@@ -221,6 +252,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             locationProvider.lastError ?? locationProvider.statusMessage,
           ),
         ),
+        if (settingsProvider.autoVisitLoggingEnabled)
+          ListTile(
+            leading: const Icon(Icons.route_outlined),
+            title: const Text('Travel Auto-log Status'),
+            subtitle: Text(
+              autoVisitProvider.lastError ?? autoVisitProvider.statusMessage,
+            ),
+          ),
         if (settingsProvider.backgroundTrackingEnabled)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -240,6 +279,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Android may require "Allow all the time" location access for background tracking.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        if (settingsProvider.autoVisitLoggingEnabled)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              'Auto-log waits for a meaningful stop before saving a visit. Tags stay optional when location is captured automatically.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -310,6 +359,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             locationProvider.lastError ??
                 'Grant background location in Android settings to keep tracking active.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleAutoVisitLoggingChanged(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    LocationTrackingProvider locationProvider,
+    bool enabled,
+  ) async {
+    if (!enabled) {
+      await settingsProvider.setAutoVisitLoggingEnabled(false);
+      return;
+    }
+
+    final granted = await locationProvider.requestTrackingPermission(
+      requireBackground: true,
+      openSettingsForBackground: true,
+    );
+
+    if (granted) {
+      await settingsProvider.setAutoVisitLoggingEnabled(true);
+      return;
+    }
+
+    await settingsProvider.setAutoVisitLoggingEnabled(false);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            locationProvider.lastError ??
+                'Background location is required for travel auto-log mode.',
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -542,8 +627,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       children: [
         const Text(
-          'A tag-first logging application for quick note-taking '
-          'with location tracking.',
+          'A travel-friendly logging application for quick note-taking, '
+          'location-aware entries, and optional automatic visit logging.',
         ),
       ],
     );

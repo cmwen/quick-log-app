@@ -81,23 +81,30 @@ class _MapScreenState extends State<MapScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Tags
               Text('Tags', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: entry.tags.map((tagId) {
-                  final tag = _tagMap[tagId];
-                  return Chip(
-                    label: Text(tag?.label ?? tagId),
-                    avatar: Icon(
-                      Icons.label,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSecondaryContainer,
-                    ),
-                  );
-                }).toList(),
-              ),
+              if (entry.tags.isEmpty)
+                Text(
+                  entry.isAutoTracked ? 'Auto-tracked visit' : 'No tags',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  children: entry.tags.map((tagId) {
+                    final tag = _tagMap[tagId];
+                    return Chip(
+                      label: Text(tag?.label ?? tagId),
+                      avatar: Icon(
+                        Icons.label,
+                        size: 16,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
+                      ),
+                    );
+                  }).toList(),
+                ),
 
               // Note
               if (entry.note != null && entry.note!.isNotEmpty) ...[
@@ -123,6 +130,23 @@ class _MapScreenState extends State<MapScreen> {
                     'Lon: ${entry.longitude!.toStringAsFixed(4)}',
                   ),
                   contentPadding: EdgeInsets.zero,
+                ),
+              ],
+              if (entry.isAutoTracked) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Visit Detection',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  [
+                    entry.reviewStatus == EntryReviewStatus.needsReview
+                        ? 'Needs review'
+                        : 'Confirmed',
+                    if (entry.visitDurationMinutes != null)
+                      '${entry.visitDurationMinutes} min stop',
+                  ].join(' • '),
                 ),
               ],
             ],
@@ -208,7 +232,9 @@ class _MapScreenState extends State<MapScreen> {
                   onTap: () => _showEntryDetails(entry),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: entry.isAutoTracked
+                          ? Theme.of(context).colorScheme.tertiary
+                          : Theme.of(context).colorScheme.primary,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(

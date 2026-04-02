@@ -5,6 +5,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 
 class LocationTrackingProvider extends ChangeNotifier {
@@ -21,6 +22,7 @@ class LocationTrackingProvider extends ChangeNotifier {
   static const Duration _geocodeRefreshWindow = Duration(minutes: 5);
 
   SettingsProvider? _settings;
+  AutoVisitProvider? _autoVisitProvider;
   StreamSubscription<Position>? _positionSubscription;
 
   double? _latitude;
@@ -63,6 +65,10 @@ class LocationTrackingProvider extends ChangeNotifier {
     if (shouldResync) {
       unawaited(_syncTrackingWithSettings());
     }
+  }
+
+  void updateAutoVisitProvider(AutoVisitProvider provider) {
+    _autoVisitProvider = provider;
   }
 
   Future<void> _loadCachedLocation() async {
@@ -323,6 +329,7 @@ class LocationTrackingProvider extends ChangeNotifier {
     }
 
     await _persistCachedLocation();
+    await _autoVisitProvider?.handlePosition(position);
     notifyListeners();
   }
 

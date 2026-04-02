@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
@@ -18,11 +19,22 @@ class QuickLogRoot extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProxyProvider<SettingsProvider, AutoVisitProvider>(
+          create: (_) => AutoVisitProvider(),
+          update: (_, settingsProvider, autoVisitProvider) {
+            final provider = autoVisitProvider ?? AutoVisitProvider();
+            provider.updateSettings(settingsProvider);
+            return provider;
+          },
+        ),
         ChangeNotifierProxyProvider<SettingsProvider, LocationTrackingProvider>(
           create: (_) => LocationTrackingProvider(),
-          update: (_, settingsProvider, locationProvider) {
+          update: (context, settingsProvider, locationProvider) {
             final provider = locationProvider ?? LocationTrackingProvider();
             provider.updateSettings(settingsProvider);
+            provider.updateAutoVisitProvider(
+              context.read<AutoVisitProvider>(),
+            );
             return provider;
           },
         ),

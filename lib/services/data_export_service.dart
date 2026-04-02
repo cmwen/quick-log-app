@@ -44,6 +44,11 @@ class DataExportService {
               'latitude': entry.latitude,
               'longitude': entry.longitude,
               'locationLabel': entry.locationLabel,
+              'source': entry.source.name,
+              'reviewStatus': entry.reviewStatus.name,
+              'visitStartedAt': entry.visitStartedAt?.toIso8601String(),
+              'visitEndedAt': entry.visitEndedAt?.toIso8601String(),
+              'visitDurationMinutes': entry.visitDurationMinutes,
             },
           )
           .toList(),
@@ -61,7 +66,9 @@ class DataExportService {
     final buffer = StringBuffer();
 
     // CSV header
-    buffer.writeln('ID,Created At,Tags,Note,Latitude,Longitude,Location Label');
+    buffer.writeln(
+      'ID,Created At,Source,Review Status,Visit Started At,Visit Ended At,Visit Duration Minutes,Tags,Note,Latitude,Longitude,Location Label',
+    );
 
     // CSV data rows
     for (var entry in entries) {
@@ -72,6 +79,11 @@ class DataExportService {
       buffer.writeln(
         '${entry.id ?? ""},'
         '"${entry.createdAt.toIso8601String()}",'
+        '${entry.source.name},'
+        '${entry.reviewStatus.name},'
+        '"${entry.visitStartedAt?.toIso8601String() ?? ""}",'
+        '"${entry.visitEndedAt?.toIso8601String() ?? ""}",'
+        '${entry.visitDurationMinutes ?? ""},'
         '"$tagLabels",'
         '"$note",'
         '${entry.latitude ?? ""},'
@@ -281,12 +293,27 @@ class DataExportService {
           final entry = LogEntry(
             createdAt: DateTime.parse(entryData['createdAt'] as String),
             note: entryData['note'] as String?,
-            tags: (entryData['tags'] as List<dynamic>)
+            tags: ((entryData['tags'] as List<dynamic>?) ?? const [])
                 .map((e) => e as String)
                 .toList(),
             latitude: (entryData['latitude'] as num?)?.toDouble(),
             longitude: (entryData['longitude'] as num?)?.toDouble(),
             locationLabel: entryData['locationLabel'] as String?,
+            source: EntrySource.values.firstWhere(
+              (value) => value.name == entryData['source'],
+              orElse: () => EntrySource.manual,
+            ),
+            reviewStatus: EntryReviewStatus.values.firstWhere(
+              (value) => value.name == entryData['reviewStatus'],
+              orElse: () => EntryReviewStatus.none,
+            ),
+            visitStartedAt: entryData['visitStartedAt'] != null
+                ? DateTime.parse(entryData['visitStartedAt'] as String)
+                : null,
+            visitEndedAt: entryData['visitEndedAt'] != null
+                ? DateTime.parse(entryData['visitEndedAt'] as String)
+                : null,
+            visitDurationMinutes: entryData['visitDurationMinutes'] as int?,
           );
           await DatabaseHelper.instance.insertEntry(entry);
           entriesImported++;

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/models/log_tag.dart';
 import 'package:quick_log_app/data/database_helper.dart';
+import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/screens/entries_screen.dart';
 import 'package:quick_log_app/screens/tags_screen.dart';
@@ -126,13 +127,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _saveEntry() async {
-    if (_selectedTags.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one tag')),
-      );
-      return;
-    }
-
+    final messenger = ScaffoldMessenger.of(context);
     final settingsProvider = Provider.of<SettingsProvider>(
       context,
       listen: false,
@@ -144,6 +139,18 @@ class _MainScreenState extends State<MainScreen> {
 
     if (settingsProvider.locationEnabled && !locationProvider.hasLocation) {
       await locationProvider.refreshLocation();
+    }
+
+    final canSaveWithoutTags =
+        settingsProvider.locationEnabled && locationProvider.hasLocation;
+
+    if (_selectedTags.isEmpty && !canSaveWithoutTags) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Select a tag or capture a location before saving'),
+        ),
+      );
+      return;
     }
 
     final entry = LogEntry(
@@ -168,7 +175,7 @@ class _MainScreenState extends State<MainScreen> {
       await _loadSuggestedTags(); // Refresh suggestions based on new entry
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Entry saved successfully'),
             duration: Duration(seconds: 2),
@@ -177,9 +184,9 @@ class _MainScreenState extends State<MainScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving entry: $e')));
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error saving entry: $e')),
+        );
       }
     }
   }
@@ -203,42 +210,70 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return Consumer2<SettingsProvider, LocationTrackingProvider>(
-      builder: (context, settingsProvider, locationProvider, child) => SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Smart Suggested Tags Section (context-aware)
-            if (_suggestedTags.isNotEmpty) ...[
-              Row(
-                children: [
-                  Icon(
-                    Icons.lightbulb_outline,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Suggested for You',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+      builder: (context, settingsProvider, locationProvider, child) {
+        final autoVisitProvider = Provider.of<AutoVisitProvider>(
+          context,
+          listen: false,
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Smart Suggested Tags Section (context-aware)
+              if (_suggestedTags.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      size: 20,
                       color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Based on time, day, and location patterns',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 8),
+                    Text(
+                      'Suggested for You',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  'Based on time, day, and location patterns',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _suggestedTags.map((tag) {
+                    return TagChipWidget(
+                      tag: tag,
+                      isSelected: _selectedTags.contains(tag.id),
+                      onTap: () => _toggleTag(tag.id),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+              ],
+
+              // Recent Tags Section
+              Text(
+                'Recently Used Tags',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _suggestedTags.map((tag) {
+                children: _recentTags.map((tag) {
                   return TagChipWidget(
                     tag: tag,
                     isSelected: _selectedTags.contains(tag.id),
@@ -246,151 +281,168 @@ class _MainScreenState extends State<MainScreen> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-            ],
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _showAllTags,
+                icon: const Icon(Icons.more_horiz),
+                label: const Text('See all tags'),
+              ),
 
-            // Recent Tags Section
-            Text(
-              'Recently Used Tags',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _recentTags.map((tag) {
-                return TagChipWidget(
-                  tag: tag,
-                  isSelected: _selectedTags.contains(tag.id),
-                  onTap: () => _toggleTag(tag.id),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: _showAllTags,
-              icon: const Icon(Icons.more_horiz),
-              label: const Text('See all tags'),
-            ),
+              // Selected Tags Section
+              if (_selectedTags.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Text(
+                  'Selected Tags (${_selectedTags.length})',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _selectedTags.map((tagId) {
+                    final tag = _allTags.firstWhere((t) => t.id == tagId);
+                    return TagChipWidget(
+                      tag: tag,
+                      isSelected: true,
+                      onTap: () => _toggleTag(tag.id),
+                      showClose: true,
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (_selectedTags.isEmpty &&
+                  settingsProvider.locationEnabled) ...[
+                const SizedBox(height: 16),
+                Card(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.travel_explore,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSecondaryContainer,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'No tags selected. If GPS is available, this will save as a lightweight location log.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
 
-            // Selected Tags Section
-            if (_selectedTags.isNotEmpty) ...[
+              // Note Section
               const SizedBox(height: 24),
               Text(
-                'Selected Tags (${_selectedTags.length})',
+                'Add Note (Optional)',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _selectedTags.map((tagId) {
-                  final tag = _allTags.firstWhere((t) => t.id == tagId);
-                  return TagChipWidget(
-                    tag: tag,
-                    isSelected: true,
-                    onTap: () => _toggleTag(tag.id),
-                    showClose: true,
-                  );
-                }).toList(),
-              ),
-            ],
-
-            // Note Section
-            const SizedBox(height: 24),
-            Text(
-              'Add Note (Optional)',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: InputDecoration(
-                hintText: 'What\'s happening?',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+              TextField(
+                controller: _noteController,
+                decoration: InputDecoration(
+                  hintText: 'What\'s happening?',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
+                maxLines: 4,
               ),
-              maxLines: 4,
-            ),
 
-            // Location Section
-            const SizedBox(height: 24),
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  settingsProvider.locationEnabled
+              // Location Section
+              const SizedBox(height: 24),
+              Card(
+                child: ListTile(
+                  leading: Icon(
+                    settingsProvider.locationEnabled
+                        ? (locationProvider.hasLocation
+                              ? Icons.location_on
+                              : Icons.location_searching)
+                        : Icons.location_disabled,
+                    color:
+                        settingsProvider.locationEnabled &&
+                            locationProvider.hasLocation
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  title: Text(
+                    settingsProvider.locationEnabled
+                        ? (locationProvider.locationLabel ??
+                              'Location not available')
+                        : 'Location tracking disabled',
+                  ),
+                  subtitle: settingsProvider.locationEnabled
                       ? (locationProvider.hasLocation
-                            ? Icons.location_on
-                            : Icons.location_searching)
-                      : Icons.location_disabled,
-                  color:
-                      settingsProvider.locationEnabled &&
-                          locationProvider.hasLocation
-                      ? Theme.of(context).colorScheme.primary
+                            ? Text(
+                                'Lat: ${locationProvider.latitude!.toStringAsFixed(4)}, '
+                                'Lon: ${locationProvider.longitude!.toStringAsFixed(4)}',
+                              )
+                            : Text(locationProvider.statusMessage))
+                      : const Text('Enable in Settings to track location'),
+                  trailing: settingsProvider.locationEnabled
+                      ? (locationProvider.isRefreshing
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.refresh),
+                                onPressed: () => locationProvider
+                                    .refreshLocation(promptForPermission: true),
+                              ))
                       : null,
                 ),
-                title: Text(
-                  settingsProvider.locationEnabled
-                      ? (locationProvider.locationLabel ??
-                            'Location not available')
-                      : 'Location tracking disabled',
-                ),
-                subtitle: settingsProvider.locationEnabled
-                    ? (locationProvider.hasLocation
-                          ? Text(
-                              'Lat: ${locationProvider.latitude!.toStringAsFixed(4)}, '
-                              'Lon: ${locationProvider.longitude!.toStringAsFixed(4)}',
-                            )
-                          : Text(locationProvider.statusMessage))
-                    : const Text('Enable in Settings to track location'),
-                trailing: settingsProvider.locationEnabled
-                    ? (locationProvider.isRefreshing
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : IconButton(
-                              icon: const Icon(Icons.refresh),
-                              onPressed: () => locationProvider.refreshLocation(
-                                promptForPermission: true,
-                              ),
-                            ))
-                    : null,
               ),
-            ),
-            if (settingsProvider.locationEnabled &&
-                settingsProvider.backgroundTrackingEnabled) ...[
-              const SizedBox(height: 8),
-              Text(
-                settingsProvider.batterySaverEnabled
-                    ? 'Background mode uses low-power updates every few minutes to reduce battery drain.'
-                    : 'Background mode uses balanced updates more often for fresher GPS data.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              if (settingsProvider.locationEnabled &&
+                  settingsProvider.backgroundTrackingEnabled) ...[
+                const SizedBox(height: 8),
+                Text(
+                  settingsProvider.batterySaverEnabled
+                      ? 'Background mode uses low-power updates every few minutes to reduce battery drain.'
+                      : 'Background mode uses balanced updates more often for fresher GPS data.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              if (settingsProvider.autoVisitLoggingEnabled) ...[
+                const SizedBox(height: 8),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.route_outlined),
+                    title: const Text('Travel auto-log'),
+                    subtitle: Text(autoVisitProvider.statusMessage),
+                  ),
+                ),
+              ],
+
+              // Save Button
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _saveEntry,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save Entry'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
+                  ),
                 ),
               ),
             ],
-
-            // Save Button
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _saveEntry,
-                icon: const Icon(Icons.save),
-                label: const Text('Save Entry'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -434,8 +486,8 @@ class _MainScreenState extends State<MainScreen> {
                 builder: (context) => AlertDialog(
                   title: const Text('About Quick Log'),
                   content: const Text(
-                    'A tag-first logging application for quick note-taking with location tracking.\n\n'
-                    'Simply select tags, add an optional note, and save your entry!',
+                    'A travel-friendly logging app for quick notes, location capture, and automatic visit tracking.\n\n'
+                    'Select tags when you want them, or let travel mode quietly save meaningful stops.',
                   ),
                   actions: [
                     TextButton(
@@ -520,10 +572,10 @@ class _TagSearchModalState extends State<_TagSearchModal> {
       maxChildSize: 0.9,
       minChildSize: 0.5,
       expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            // Header
-            Container(
+      builder: (context, scrollController) => Column(
+        children: [
+          // Header
+          Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
@@ -646,22 +698,22 @@ class _TagSearchModalState extends State<_TagSearchModal> {
                       );
                     },
                   ),
-           ),
-           SafeArea(
-             top: false,
-             child: Padding(
-               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-               child: SizedBox(
-                 width: double.infinity,
-                 child: FilledButton(
-                   onPressed: () => Navigator.pop(context),
-                   child: const Text('Done'),
-                 ),
-               ),
-             ),
-           ),
-         ],
-       ),
-     );
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
