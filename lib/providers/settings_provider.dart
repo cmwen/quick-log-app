@@ -37,100 +37,91 @@ class SettingsProvider extends ChangeNotifier {
     _travelModeEnabled = prefs.getBool(_travelModeEnabledKey) ?? false;
     _autoVisitLoggingEnabled =
         prefs.getBool(_autoVisitLoggingEnabledKey) ?? false;
-    if (!_locationEnabled) {
-      _backgroundTrackingEnabled = false;
-      _travelModeEnabled = false;
-      _autoVisitLoggingEnabled = false;
-    }
-    if (!_travelModeEnabled) {
-      _autoVisitLoggingEnabled = false;
-    }
-    if (_autoVisitLoggingEnabled) {
-      _locationEnabled = true;
-      _backgroundTrackingEnabled = true;
-      _travelModeEnabled = true;
-    }
+    _normalizeState();
     _isLoaded = true;
     notifyListeners();
   }
 
   Future<void> setLocationEnabled(bool enabled) async {
     _locationEnabled = enabled;
-    if (!enabled) {
-      _backgroundTrackingEnabled = false;
-      _travelModeEnabled = false;
-      _autoVisitLoggingEnabled = false;
-    }
+    _normalizeState();
     notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_locationEnabledKey, enabled);
-    if (!enabled) {
-      await prefs.setBool(_backgroundTrackingEnabledKey, false);
-      await prefs.setBool(_travelModeEnabledKey, false);
-      await prefs.setBool(_autoVisitLoggingEnabledKey, false);
-    }
+    await _persistSettings();
   }
 
   Future<void> setBackgroundTrackingEnabled(bool enabled) async {
     _backgroundTrackingEnabled = enabled;
-    if (enabled) {
-      _locationEnabled = true;
-    } else {
+    if (!enabled) {
+      _travelModeEnabled = false;
       _autoVisitLoggingEnabled = false;
     }
+    _normalizeState();
     notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_backgroundTrackingEnabledKey, enabled);
-    if (enabled) {
-      await prefs.setBool(_locationEnabledKey, true);
-    } else {
-      await prefs.setBool(_autoVisitLoggingEnabledKey, false);
-    }
+    await _persistSettings();
   }
 
   Future<void> setBatterySaverEnabled(bool enabled) async {
     _batterySaverEnabled = enabled;
     notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_batterySaverEnabledKey, enabled);
+    await _persistSettings();
   }
 
   Future<void> setTravelModeEnabled(bool enabled) async {
     _travelModeEnabled = enabled;
     if (enabled) {
-      _locationEnabled = true;
+      _batterySaverEnabled = true;
     } else {
+      _backgroundTrackingEnabled = false;
       _autoVisitLoggingEnabled = false;
     }
+    _normalizeState();
     notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_travelModeEnabledKey, enabled);
-    if (enabled) {
-      await prefs.setBool(_locationEnabledKey, true);
-    } else {
-      await prefs.setBool(_autoVisitLoggingEnabledKey, false);
-    }
+    await _persistSettings();
   }
 
   Future<void> setAutoVisitLoggingEnabled(bool enabled) async {
     _autoVisitLoggingEnabled = enabled;
     if (enabled) {
+      _batterySaverEnabled = true;
+    } else {
+      _travelModeEnabled = false;
+    }
+    _normalizeState();
+    notifyListeners();
+    await _persistSettings();
+  }
+
+  void _normalizeState() {
+    if (!_locationEnabled) {
+      _backgroundTrackingEnabled = false;
+      _travelModeEnabled = false;
+      _autoVisitLoggingEnabled = false;
+      return;
+    }
+
+    if (_travelModeEnabled || _autoVisitLoggingEnabled) {
       _locationEnabled = true;
       _backgroundTrackingEnabled = true;
       _travelModeEnabled = true;
+      _autoVisitLoggingEnabled = true;
+      return;
     }
-    notifyListeners();
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_autoVisitLoggingEnabledKey, enabled);
-    if (enabled) {
-      await prefs.setBool(_locationEnabledKey, true);
-      await prefs.setBool(_backgroundTrackingEnabledKey, true);
-      await prefs.setBool(_travelModeEnabledKey, true);
+    if (!_backgroundTrackingEnabled) {
+      _travelModeEnabled = false;
+      _autoVisitLoggingEnabled = false;
     }
+  }
+
+  Future<void> _persistSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_locationEnabledKey, _locationEnabled);
+    await prefs.setBool(
+      _backgroundTrackingEnabledKey,
+      _backgroundTrackingEnabled,
+    );
+    await prefs.setBool(_batterySaverEnabledKey, _batterySaverEnabled);
+    await prefs.setBool(_travelModeEnabledKey, _travelModeEnabled);
+    await prefs.setBool(_autoVisitLoggingEnabledKey, _autoVisitLoggingEnabled);
   }
 }

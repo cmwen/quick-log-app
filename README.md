@@ -2,7 +2,7 @@
 
 Official website: https://cmwen.github.io/quick-log-app
 
-An Android-first tag-based logging app for quick note-taking with smart tag suggestions, optional location tracking, map history, and local import/export. Built with Flutter.
+An Android-first tag-based logging app for quick note-taking with smart tag suggestions, optional location tracking, reviewable Travel Mode visit capture, map history, and local import/export. Built with Flutter.
 
 ## ✨ Features
 
@@ -10,10 +10,11 @@ An Android-first tag-based logging app for quick note-taking with smart tag sugg
 - 💡 **Smart Tag Suggestions**: Suggestions adapt to your time, day, and location patterns
 - 🔎 **Searchable Tag Picker**: Browse, search, and filter tags by category
 - 📍 **Optional Location Tracking**: Capture location labels and coordinates when enabled
+- ✈️ **Travel Mode Review Queue**: Bundle background tracking and automatic visit capture, then confirm or edit travel logs later
 - 🗺️ **Map View**: Review entries with location data on an interactive map
-- 🧰 **Entry Management**: Filter, inspect, edit, and delete saved entries
+- 🧰 **Entry Management**: Filter, inspect, edit, review, and delete saved entries
 - 📤 **Import / Export**: Export all data to JSON/CSV and import JSON backups
-- ⚙️ **Settings**: Theme selection, location toggle, background tracking, and GPS battery saver
+- ⚙️ **Settings**: Theme selection, location toggle, background tracking, Travel Mode bundle, and GPS battery saver
 - 🗄️ **Local-Only Storage**: Entries and tags stay on-device in SQLite
 
 ## 🚀 Quick Start
@@ -58,6 +59,12 @@ flutter build apk --release
 flutter build appbundle --release
 ```
 
+## ✈️ Travel Mode Review Flow
+
+1. Enable **Travel Mode** in **Settings** to bundle background tracking, battery saver defaults, and automatic visited-place capture.
+2. Let the app quietly save meaningful stops as travel logs that are marked **needs review**.
+3. Open **Entries** to review, edit, tag, or confirm those logs when you are ready.
+
 ## 📱 Android Permissions
 
 The app requires the following permissions:
@@ -71,7 +78,7 @@ The app requires the following permissions:
 | `FOREGROUND_SERVICE_LOCATION` | Required for foreground location updates on newer Android versions |
 | `INTERNET` | Reverse geocoding and OpenStreetMap tiles |
 
-The app works without location access, but map features and automatic location capture require permission. Background tracking only activates if you enable it in **Settings** and grant Android's **Allow all the time** location permission.
+The app works without location access, but map features and automatic location capture require permission. Background tracking and Travel Mode only activate if you enable them in **Settings** and grant Android's **Allow all the time** location permission.
 
 ## 🏗️ Project Structure
 

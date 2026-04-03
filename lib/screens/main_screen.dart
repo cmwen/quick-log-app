@@ -209,13 +209,12 @@ class _MainScreenState extends State<MainScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return Consumer2<SettingsProvider, LocationTrackingProvider>(
-      builder: (context, settingsProvider, locationProvider, child) {
-        final autoVisitProvider = Provider.of<AutoVisitProvider>(
-          context,
-          listen: false,
-        );
-
+    return Consumer3<
+      SettingsProvider,
+      LocationTrackingProvider,
+      AutoVisitProvider
+    >(
+      builder: (context, settingsProvider, locationProvider, autoVisitProvider, child) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -420,8 +419,21 @@ class _MainScreenState extends State<MainScreen> {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.route_outlined),
-                    title: const Text('Travel auto-log'),
-                    subtitle: Text(autoVisitProvider.statusMessage),
+                    title: Text(
+                      settingsProvider.travelModeEnabled
+                          ? 'Travel Mode capture'
+                          : 'Travel auto-log',
+                    ),
+                    subtitle: Text(
+                      '${autoVisitProvider.statusMessage}\n'
+                      'New travel logs appear in Entries and stay marked for review until you confirm or edit them.',
+                    ),
+                    isThreeLine: true,
+                    trailing: Icon(
+                      settingsProvider.batterySaverEnabled
+                          ? Icons.battery_saver_outlined
+                          : Icons.gps_fixed,
+                    ),
                   ),
                 ),
               ],
@@ -487,7 +499,7 @@ class _MainScreenState extends State<MainScreen> {
                   title: const Text('About Quick Log'),
                   content: const Text(
                     'A travel-friendly logging app for quick notes, location capture, and automatic visit tracking.\n\n'
-                    'Select tags when you want them, or let travel mode quietly save meaningful stops.',
+                    'Select tags when you want them, or let Travel Mode quietly save meaningful stops for later review, editing, and tagging.',
                   ),
                   actions: [
                     TextButton(

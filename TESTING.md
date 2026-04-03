@@ -27,10 +27,20 @@ flutter test --verbose
 ```bash
 # Run specific test file
 flutter test test/widget_test.dart
+flutter test test/settings_provider_test.dart
+flutter test test/visit_detection_service_test.dart
 
 # Run tests matching pattern
 flutter test --plain-name "Quick Log app starts"
 ```
+
+## Current Automated Suites
+
+The repository currently includes these committed test suites:
+
+- `test/widget_test.dart` - smoke test that boots `QuickLogRoot`
+- `test/settings_provider_test.dart` - verifies Travel Mode bundling and background-tracking setting normalization
+- `test/visit_detection_service_test.dart` - verifies travel-mode review entries and everyday dwell thresholds
 
 ### Watch Mode
 ```bash
@@ -42,7 +52,7 @@ flutter test --watch
 
 ### Unit Tests
 
-Location: `test/unit/`
+Location: `test/` (for example `test/settings_provider_test.dart` and `test/visit_detection_service_test.dart`)
 
 Example:
 ```dart
@@ -338,6 +348,8 @@ test('async test', () async {
 flutter test                          # Run all tests
 flutter test --coverage               # With coverage
 flutter test test/widget_test.dart    # Specific file
+flutter test test/settings_provider_test.dart
+flutter test test/visit_detection_service_test.dart
 flutter test --update-goldens         # Update golden files
 flutter test --verbose                # Verbose output
 flutter test --watch                  # Watch mode

@@ -34,7 +34,8 @@ Quick Log has been successfully implemented as an Android Flutter application. T
   - People: Solo, Family, Friends, Coworkers
 
 ### Main Entry Screen (Tag-First Approach)
-- [x] **Quick Select Tags** - Display most-used tags for fast selection
+- [x] **Smart Suggested Tags** - Display context-aware tags based on time, day, and location history
+- [x] **Quick Select Tags** - Display recent tags for fast selection
 - [x] **Tag Selection** - Filter chips with visual feedback
 - [x] **Tag Categories** - Color-coded by category
 - [x] **All Tags View** - Modal bottom sheet with complete tag list
@@ -48,12 +49,16 @@ Quick Log has been successfully implemented as an Android Flutter application. T
   - Display of coordinates and location label
 
 - [x] **Save Entry** - Validation and database insertion
+- [x] **Location-Only Save** - Allows lightweight place logs when GPS is available
 - [x] **Usage Tracking** - Automatic tag usage count updates
 
 ### Entries Screen
 - [x] **Entry List** - Chronological display of all entries
 - [x] **Entry Cards** - Show date, time, tags, note preview, location
 - [x] **Entry Details** - Modal bottom sheet with full entry information
+- [x] **Advanced Filtering** - Filter by tags, date range, and location presence
+- [x] **Travel Review Queue** - Pending-review banner for auto-captured travel logs
+- [x] **Entry Editing** - Swipe right or open details to edit entries
 - [x] **Delete Entry** - With confirmation dialog
 - [x] **Pull to Refresh** - Manual data refresh
 - [x] **Empty State** - Friendly message when no entries exist
@@ -124,6 +129,10 @@ Quick Log has been successfully implemented as an Android Flutter application. T
 - [x] **Settings Screen** - Theme and preferences
   - Theme selection (System, Light, Dark)
   - Theme persistence using shared_preferences
+  - Location tracking toggle
+  - Background tracking toggle
+  - Travel Mode bundle with reviewable auto-visit capture
+  - Battery saver controls for GPS sampling
   - Clean Material Design 3 settings UI
 
 ### Entry Management Enhancements
@@ -132,25 +141,27 @@ Quick Log has been successfully implemented as an Android Flutter application. T
   - Swipe right to edit entry
   - Visual feedback with colored backgrounds
 
+### Travel Logging & Suggestions
+- [x] **Visit Detection** - Meaningful stops can be saved automatically as travel logs
+- [x] **Review Status** - Auto-captured travel logs can stay pending until confirmed
+- [x] **Smart Tag Suggestions** - Suggest tags from historical time, day, and location patterns
+
 ## ⚠️ Partial/Simplified Implementation
 
 These features from the Android docs were adapted for Flutter:
 
 ### Simplified from Android Design
 - **No Timeline View** - The timeline dialog from the map feature wasn't implemented
-- **No Date Range Filtering** - Filter by date range not implemented in entries screen
-- **No Tag Relations** - TagLinkEntity for tag suggestions not implemented
+- **No Tag Relations** - TagLinkEntity-style relationship modeling is not implemented
 
 ## 📋 Not Yet Implemented
 
 Features described in the docs that could be added:
 
 ### Advanced Features
-- [ ] **Search & Filtering**
-  - Search entries by text
-  - Filter by date range
-  - Filter by specific tags
-  - Filter by location
+- [ ] **Search**
+  - Search entries by free text
+  - Search tags directly from the entries list
   
 - [ ] **Statistics & Insights**
   - Most used tags
@@ -159,9 +170,8 @@ Features described in the docs that could be added:
   - Time-based analytics
   
 - [ ] **Tag Relationships**
-  - Tag suggestions based on patterns
   - Frequently used tag combinations
-  - Smart tag recommendations
+  - Relationship-aware tag recommendations
   
 - [ ] **Data Sync**
   - Cloud backup
@@ -170,8 +180,10 @@ Features described in the docs that could be added:
 ## 🧪 Testing Status
 
 - [x] **Basic Widget Test** - App starts successfully
+- [x] **Unit Tests** - SettingsProvider travel-mode bundling
+- [x] **Unit Tests** - VisitDetectionService travel-mode thresholds
 - [ ] **Unit Tests** - Database operations
-- [ ] **Unit Tests** - Data models
+- [ ] **Unit Tests** - Additional data model helpers
 - [ ] **Widget Tests** - Individual screens
 - [ ] **Integration Tests** - Full user flows
 
@@ -186,28 +198,30 @@ dependencies:
   path: ^1.8.3                  # Path manipulation
   
   # Location Services
-  geolocator: ^10.1.0           # Location services
-  geocoding: ^2.1.1             # Reverse geocoding
+  geolocator: ^14.0.2           # Location services
+  geocoding: ^4.0.0             # Reverse geocoding
   
   # Date & Time
-  intl: ^0.19.0                 # Date formatting
+  intl: ^0.20.2                 # Date formatting
   
   # UI Components
   flutter_chips_input: ^2.0.0   # Chip input widgets
   
   # Map Support
-  flutter_map: ^6.1.0           # OpenStreetMap maps
+  flutter_map: ^8.2.2           # OpenStreetMap maps
   latlong2: ^0.9.1              # Latitude/longitude handling
   
   # Data Export/Import
-  share_plus: ^7.2.1            # Share functionality
-  file_picker: ^6.1.1           # File selection for import
+  share_plus: ^12.0.1           # Share functionality
+  file_picker: ^10.3.10         # File selection for import
   
   # Settings/Preferences
-  shared_preferences: ^2.2.2    # Persistent settings storage
+  shared_preferences: ^2.5.4    # Persistent settings storage
+  package_info_plus: ^9.0.0     # Version metadata in settings
 
 dev_dependencies:
-  flutter_launcher_icons: ^0.13.1  # App icon generation
+  flutter_lints: ^6.0.0            # Recommended lint rules
+  flutter_launcher_icons: ^0.14.4  # App icon generation
 ```
 
 ## 🔨 Build & Compile Status

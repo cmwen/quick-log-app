@@ -32,7 +32,9 @@ class AutoVisitProvider extends ChangeNotifier {
         settings.autoVisitLoggingEnabled;
     _statusMessage = _isEnabled
         ? (settings.travelModeEnabled
-              ? 'Travel mode is watching for meaningful stops.'
+              ? (settings.batterySaverEnabled
+                    ? 'Travel mode is quietly watching for meaningful stops in battery saver mode.'
+                    : 'Travel mode is watching for meaningful stops with fresher balanced updates.')
               : 'Auto-logging is watching for dwell-based stops.')
         : 'Auto-logging is off.';
     notifyListeners();
@@ -62,11 +64,12 @@ class AutoVisitProvider extends ChangeNotifier {
         candidate: _candidate!,
         locationLabel: label,
         latestLoggedVisit: _lastAutoLoggedVisit,
+        travelModeEnabled: settings.travelModeEnabled,
       );
 
       if (nextEntry == null) {
         _statusMessage = settings.travelModeEnabled
-            ? 'Travel mode is learning your current stop.'
+            ? 'Travel mode is learning your current stop for later review.'
             : 'Watching for longer stops before auto-saving.';
         notifyListeners();
         return;
@@ -77,8 +80,8 @@ class AutoVisitProvider extends ChangeNotifier {
       _candidate = null;
       _lastError = null;
       _statusMessage = nextEntry.locationLabel != null
-          ? 'Logged ${nextEntry.locationLabel} automatically.'
-          : 'Logged a new visit automatically.';
+          ? 'Saved ${nextEntry.locationLabel} for review.'
+          : 'Saved a new visit for review.';
       notifyListeners();
     } catch (error) {
       _lastError = 'Auto-log failed: $error';

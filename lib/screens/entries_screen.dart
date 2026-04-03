@@ -111,6 +111,53 @@ class _EntriesScreenState extends State<EntriesScreen> {
     _applyFilters();
   }
 
+  int get _pendingReviewCount =>
+      _entries.where((entry) => entry.needsReview).length;
+
+  LogEntry? get _nextPendingReviewEntry {
+    for (final entry in _entries) {
+      if (entry.needsReview) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  LogEntry _markReviewedIfNeeded(LogEntry entry) {
+    if (entry.isAutoTracked && entry.needsReview) {
+      return entry.copyWith(reviewStatus: EntryReviewStatus.confirmed);
+    }
+    return entry;
+  }
+
+  Future<void> _saveUpdatedEntry(
+    LogEntry entry, {
+    required String successMessage,
+  }) async {
+    try {
+      await DatabaseHelper.instance.updateEntry(entry);
+      await _loadData();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating entry: $e')));
+      }
+    }
+  }
+
+  Future<void> _confirmEntryReview(LogEntry entry) async {
+    await _saveUpdatedEntry(
+      _markReviewedIfNeeded(entry),
+      successMessage: 'Travel log confirmed',
+    );
+  }
+
   Future<void> _deleteEntry(LogEntry entry, {bool confirm = true}) async {
     if (confirm) {
       final confirmed = await showDialog<bool>(
@@ -160,17 +207,33 @@ class _EntriesScreenState extends State<EntriesScreen> {
     );
     final Set<String> selectedTags = Set.from(entry.tags);
     final canLeaveTagsEmpty = entry.hasLocation;
+    final isReviewFlow = entry.isAutoTracked && entry.needsReview;
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Edit Entry'),
+          title: Text(isReviewFlow ? 'Review Travel Log' : 'Edit Entry'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (isReviewFlow) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'This travel log was created automatically. Confirm it after checking the place, tags, and any note you want to keep.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Text('Tags', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 Wrap(
@@ -213,7 +276,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Save'),
+              child: Text(isReviewFlow ? 'Confirm Log' : 'Save'),
             ),
           ],
         ),
@@ -229,28 +292,29 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
           );
         }
+        noteController.dispose();
         return;
       }
       try {
-        final updatedEntry = entry.copyWith(
-          note: noteController.text.isEmpty ? null : noteController.text,
-          tags: selectedTags.toList(),
+        final updatedEntry = _markReviewedIfNeeded(
+          entry.copyWith(
+            note: noteController.text.isEmpty ? null : noteController.text,
+            tags: selectedTags.toList(),
+          ),
         );
-        await DatabaseHelper.instance.updateEntry(updatedEntry);
-        await _loadData();
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Entry updated')));
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error updating entry: $e')));
-        }
+        await _saveUpdatedEntry(
+          updatedEntry,
+          successMessage: isReviewFlow
+              ? 'Travel log reviewed'
+              : 'Entry updated',
+        );
+      } finally {
+        noteController.dispose();
       }
+      return;
     }
+
+    noteController.dispose();
   }
 
   void _showEntryDetails(LogEntry entry) {
@@ -316,11 +380,13 @@ class _EntriesScreenState extends State<EntriesScreen> {
                 ),
                 const SizedBox(height: 8),
                 ListTile(
-                  leading: const Icon(Icons.route_outlined),
+                  leading: Icon(
+                    entry.needsReview
+                        ? Icons.pending_actions_outlined
+                        : Icons.check_circle_outline,
+                  ),
                   title: Text(
-                    entry.reviewStatus == EntryReviewStatus.needsReview
-                        ? 'Needs review'
-                        : 'Confirmed visit',
+                    entry.needsReview ? 'Needs review' : 'Confirmed visit',
                   ),
                   subtitle: Text(
                     [
@@ -334,6 +400,20 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   ),
                   contentPadding: EdgeInsets.zero,
                 ),
+                if (entry.needsReview)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Review this travel log so it no longer stays pending. You can confirm it as-is or edit tags and notes first.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
               ],
 
               // Note
@@ -366,6 +446,36 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ],
 
               const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _editEntry(entry);
+                  },
+                  icon: Icon(
+                    entry.needsReview ? Icons.rate_review : Icons.edit,
+                  ),
+                  label: Text(
+                    entry.needsReview ? 'Review & Edit' : 'Edit Entry',
+                  ),
+                ),
+              ),
+              if (entry.needsReview) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _confirmEntryReview(entry);
+                    },
+                    icon: const Icon(Icons.check),
+                    label: const Text('Confirm as Visited'),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -585,7 +695,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Start logging to see your entries here',
+                'Start logging or use Travel Mode to see entries here',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
@@ -599,6 +709,56 @@ class _EntriesScreenState extends State<EntriesScreen> {
     return Scaffold(
       body: Column(
         children: [
+          if (_pendingReviewCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Card(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.pending_actions_outlined,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onTertiaryContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _pendingReviewCount == 1
+                                  ? '1 travel log needs review'
+                                  : '$_pendingReviewCount travel logs need review',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Travel Mode can quietly create place logs for later cleanup. Confirm or edit them so they no longer stay pending.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: () {
+                          final nextEntry = _nextPendingReviewEntry;
+                          if (nextEntry != null) {
+                            _showEntryDetails(nextEntry);
+                          }
+                        },
+                        icon: const Icon(Icons.rate_review_outlined),
+                        label: const Text('Review next travel log'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           // Filter status bar
           if (_hasActiveFilters)
             Container(
@@ -816,11 +976,30 @@ class _EntriesScreenState extends State<EntriesScreen> {
                                       ],
                                     ),
                                   if (entry.isAutoTracked)
-                                    Text(
-                                      entry.reviewStatus ==
-                                              EntryReviewStatus.needsReview
-                                          ? 'Auto-detected stop pending review'
-                                          : 'Auto-detected stop',
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          entry.needsReview
+                                              ? Icons.pending_actions_outlined
+                                              : Icons.check_circle_outline,
+                                          size: 14,
+                                          color: entry.needsReview
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.secondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            entry.needsReview
+                                                ? 'Travel log pending review'
+                                                : 'Travel log confirmed',
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                 ],
                               ),

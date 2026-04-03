@@ -11,6 +11,10 @@ class VisitDetectionService {
   static const Duration _minimumGapBeforeLeaving = Duration(minutes: 3);
   static const double _minimumVisitDistanceMeters = 150;
 
+  Duration _dwellThresholdFor(bool travelModeEnabled) {
+    return travelModeEnabled ? _travelDwellThreshold : _everydayDwellThreshold;
+  }
+
   VisitCandidate? updateCandidate({
     required VisitCandidate? candidate,
     required Position position,
@@ -37,9 +41,7 @@ class VisitDetectionService {
       return candidate.absorb(position, timestamp);
     }
 
-    final dwellThreshold = travelModeEnabled
-        ? _travelDwellThreshold
-        : _everydayDwellThreshold;
+    final dwellThreshold = _dwellThresholdFor(travelModeEnabled);
 
     if (candidate.duration >= dwellThreshold &&
         distance >= _minimumVisitDistanceMeters &&
@@ -55,8 +57,9 @@ class VisitDetectionService {
     required VisitCandidate candidate,
     required String? locationLabel,
     required LogEntry? latestLoggedVisit,
+    required bool travelModeEnabled,
   }) {
-    if (candidate.duration < _travelDwellThreshold) {
+    if (candidate.duration < _dwellThresholdFor(travelModeEnabled)) {
       return null;
     }
 

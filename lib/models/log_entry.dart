@@ -33,6 +33,8 @@ class LogEntry {
 
   bool get hasLocation => latitude != null && longitude != null;
   bool get isAutoTracked => source == EntrySource.autoVisit;
+  bool get needsReview => reviewStatus == EntryReviewStatus.needsReview;
+  bool get isReviewConfirmed => reviewStatus == EntryReviewStatus.confirmed;
 
   Map<String, dynamic> toMap() {
     return {

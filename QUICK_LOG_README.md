@@ -1,6 +1,6 @@
 # Quick Log 📝
 
-A tag-first logging Android application for quick note-taking with automatic location tracking.
+A tag-first logging Android application for quick note-taking with optional location capture, smart suggestions, and Travel Mode visit tracking that you review later.
 
 ![Platform](https://img.shields.io/badge/platform-Android-blue)
 ![Flutter](https://img.shields.io/badge/Flutter-3.10.1+-02569B?logo=flutter)
@@ -23,6 +23,8 @@ A tag-first logging Android application for quick note-taking with automatic loc
 - **Map View** - Interactive OpenStreetMap showing all logged locations
 - **Location Markers** - Tap markers to view entry details
 - **Location Toggle** - Enable/disable location tracking in Settings
+- **Travel Mode** - Bundle background tracking and automatic place capture for later review
+- **Reviewable Auto Visits** - Travel logs stay marked as needing review until you confirm or edit them
 - **Location Privacy** - Location data never leaves your device
 
 ### Data Management
@@ -35,6 +37,7 @@ A tag-first logging Android application for quick note-taking with automatic loc
 ### Settings & Customization
 - **Theme Selection** - Choose System, Light, or Dark theme
 - **Location Control** - Toggle location tracking on/off
+- **Background Tracking Controls** - Configure background GPS, Travel Mode, and battery saver behavior
 - **Persistent Settings** - Preferences saved across sessions
 - **Custom App Icon** - Blue-themed branded icon
 
@@ -131,6 +134,20 @@ flutter build appbundle --release
 5. Pull down to refresh the list
 6. **Swipe left** on an entry to delete it
 7. **Swipe right** on an entry to edit it
+8. Review any **pending travel logs** from the banner at the top of the list or from the status row on each auto-tracked entry
+
+### Using Travel Mode
+
+1. Navigate to the **Settings** tab
+2. Enable **Travel Mode** to bundle:
+   - Background tracking
+   - Auto-log visited places
+   - Battery saver defaults for lower-power GPS updates
+3. Keep moving normally and let the app save meaningful stops as reviewable travel logs
+4. Open the **Entries** tab to:
+   - Confirm a travel log once it looks right
+   - Edit tags or notes before confirming
+   - Delete travel logs you do not want to keep
 
 ### Using the Map View
 
@@ -198,7 +215,7 @@ flutter build appbundle --release
 - **Maps**: flutter_map with OpenStreetMap
 - **Export/Import**: share_plus, file_picker
 - **Settings**: shared_preferences
-- **State Management**: StatefulWidget (can be upgraded to Provider/Riverpod)
+- **State Management**: Provider with ChangeNotifier-based app settings and background services
 - **UI**: Material Design 3
 
 ### Project Structure
@@ -209,18 +226,23 @@ lib/
 ├── data/
 │   └── database_helper.dart  # SQLite database operations
 ├── models/
-│   ├── log_entry.dart        # Entry data model
+│   ├── log_entry.dart        # Entry data model, source, and review state
 │   └── log_tag.dart          # Tag data model & categories
 ├── providers/
+│   ├── auto_visit_provider.dart
+│   ├── location_tracking_provider.dart
+│   ├── settings_provider.dart
 │   └── theme_provider.dart   # Theme state management
 ├── screens/
-│   ├── main_screen.dart      # Entry creation screen
-│   ├── entries_screen.dart   # Entry list with swipe actions
+│   ├── main_screen.dart      # Entry creation + smart suggestions
+│   ├── entries_screen.dart   # Entry list, filters, and travel review flow
 │   ├── tags_screen.dart      # Tag management
 │   ├── map_screen.dart       # Map view with markers
-│   └── settings_screen.dart  # Theme & export settings
+│   └── settings_screen.dart  # Theme, privacy, travel, and export settings
 ├── services/
-│   └── export_service.dart   # JSON/CSV export logic
+│   ├── data_export_service.dart
+│   ├── tag_suggestion_service.dart
+│   └── visit_detection_service.dart
 └── widgets/
     └── tag_chip.dart         # Reusable tag chip widget
 ```
@@ -236,6 +258,11 @@ lib/
 - latitude: double?
 - longitude: double?
 - locationLabel: String?
+- source: EntrySource (manual, autoVisit)
+- reviewStatus: EntryReviewStatus (none, needsReview, confirmed)
+- visitStartedAt: DateTime?
+- visitEndedAt: DateTime?
+- visitDurationMinutes: int?
 ```
 
 **LogTag**

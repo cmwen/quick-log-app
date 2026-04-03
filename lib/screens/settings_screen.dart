@@ -207,23 +207,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           secondary: const Icon(Icons.flight_takeoff_outlined),
           title: const Text('Travel Mode'),
           subtitle: const Text(
-            'Tune tracking for longer stops and travel-style visit review',
+            'Bundle background tracking and visited-place capture for later review',
           ),
           value: settingsProvider.travelModeEnabled,
-          onChanged: settingsProvider.locationEnabled
-              ? (value) async {
-                  await settingsProvider.setTravelModeEnabled(value);
-                }
-              : null,
+          onChanged: (value) => _handleTravelModeChanged(
+            context,
+            settingsProvider,
+            locationProvider,
+            value,
+          ),
         ),
         SwitchListTile(
           secondary: const Icon(Icons.timeline_outlined),
           title: const Text('Auto-log Visited Places'),
-          subtitle: const Text(
-            'Create reviewable visit entries automatically after meaningful stops',
+          subtitle: Text(
+            settingsProvider.travelModeEnabled
+                ? 'Included with Travel Mode while automatic capture is active'
+                : 'Create reviewable visit entries automatically after meaningful stops',
           ),
           value: settingsProvider.autoVisitLoggingEnabled,
-          onChanged: settingsProvider.locationEnabled
+          onChanged: !settingsProvider.travelModeEnabled
               ? (value) => _handleAutoVisitLoggingChanged(
                   context,
                   settingsProvider,
@@ -234,9 +237,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         SwitchListTile(
           secondary: const Icon(Icons.battery_saver_outlined),
-          title: const Text('Battery Saver for GPS'),
-          subtitle: const Text(
-            'Use fewer location updates to reduce battery consumption',
+          title: Text(
+            settingsProvider.travelModeEnabled
+                ? 'Battery Saver for Travel Mode'
+                : 'Battery Saver for GPS',
+          ),
+          subtitle: Text(
+            settingsProvider.travelModeEnabled
+                ? 'Travel Mode starts here by default. Turn this off for fresher balanced tracking.'
+                : 'Use fewer location updates to reduce battery consumption',
           ),
           value: settingsProvider.batterySaverEnabled,
           onChanged: settingsProvider.locationEnabled
@@ -265,8 +274,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
               settingsProvider.batterySaverEnabled
-                  ? 'Battery saver keeps background GPS low-power by reducing accuracy and update frequency.'
-                  : 'Balanced mode refreshes more often for better position accuracy, which uses more battery.',
+                  ? 'Battery saver keeps background GPS low-power by reducing accuracy and update frequency. Travel Mode uses this by default.'
+                  : 'Balanced mode refreshes more often for better position accuracy and quicker stop detection, which uses more battery.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -286,7 +295,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
-              'Auto-log waits for a meaningful stop before saving a visit. Tags stay optional when location is captured automatically.',
+              'Travel logs are saved as items needing review. Open Entries to confirm, edit, or tag them later.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -359,6 +368,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             locationProvider.lastError ??
                 'Grant background location in Android settings to keep tracking active.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleTravelModeChanged(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    LocationTrackingProvider locationProvider,
+    bool enabled,
+  ) async {
+    if (!enabled) {
+      await settingsProvider.setTravelModeEnabled(false);
+      return;
+    }
+
+    final granted = await locationProvider.requestTrackingPermission(
+      requireBackground: true,
+      openSettingsForBackground: true,
+    );
+
+    if (granted) {
+      await settingsProvider.setTravelModeEnabled(true);
+      return;
+    }
+
+    await settingsProvider.setTravelModeEnabled(false);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            locationProvider.lastError ??
+                'Travel Mode needs background location so it can quietly capture visited places.',
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -628,7 +673,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         const Text(
           'A travel-friendly logging application for quick note-taking, '
-          'location-aware entries, and optional automatic visit logging.',
+          'location-aware entries, and Travel Mode that quietly captures visited places for later review.',
         ),
       ],
     );
