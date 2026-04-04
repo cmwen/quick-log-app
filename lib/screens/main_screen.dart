@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_log_app/models/log_entry.dart';
@@ -11,16 +13,19 @@ import 'package:quick_log_app/screens/map_screen.dart';
 import 'package:quick_log_app/screens/settings_screen.dart';
 import 'package:quick_log_app/widgets/tag_chip.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 import 'package:quick_log_app/services/tag_suggestion_service.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({super.key, this.initialLaunchAction});
+
+  final WidgetLaunchAction? initialLaunchAction;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   final TextEditingController _noteController = TextEditingController();
   final Set<String> _selectedTags = {};
   List<LogTag> _suggestedTags = [];
@@ -32,14 +37,25 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _applyInitialLaunchAction();
     _loadTags();
     _loadSuggestedTags();
+    unawaited(QuickLogHomeWidgetService.instance.sync());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _noteController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_consumePendingLaunchAction());
+    }
   }
 
   Future<void> _loadTags() async {
@@ -173,6 +189,7 @@ class _MainScreenState extends State<MainScreen> {
 
       await _loadTags(); // Refresh to update usage counts
       await _loadSuggestedTags(); // Refresh suggestions based on new entry
+      await QuickLogHomeWidgetService.instance.sync();
 
       if (mounted) {
         messenger.showSnackBar(
@@ -188,6 +205,38 @@ class _MainScreenState extends State<MainScreen> {
           SnackBar(content: Text('Error saving entry: $e')),
         );
       }
+    }
+  }
+
+  void _applyInitialLaunchAction() {
+    final action = widget.initialLaunchAction;
+    if (action == null) {
+      return;
+    }
+
+    _applyLaunchAction(action);
+  }
+
+  Future<void> _consumePendingLaunchAction() async {
+    final action = await QuickLogHomeWidgetService.instance
+        .consumeLaunchAction();
+    if (!mounted || action == null) {
+      return;
+    }
+
+    setState(() {
+      _applyLaunchAction(action);
+    });
+  }
+
+  void _applyLaunchAction(WidgetLaunchAction action) {
+    _selectedIndex = action.destination == WidgetLaunchDestination.entries
+        ? 1
+        : 0;
+
+    if (action.tagId != null &&
+        action.destination == WidgetLaunchDestination.record) {
+      _selectedTags.add(action.tagId!);
     }
   }
 

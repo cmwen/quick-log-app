@@ -27,6 +27,7 @@ flutter test --verbose
 ```bash
 # Run specific test file
 flutter test test/widget_test.dart
+flutter test test/home_widget_service_test.dart
 flutter test test/settings_provider_test.dart
 flutter test test/visit_detection_service_test.dart
 
@@ -39,6 +40,7 @@ flutter test --plain-name "Quick Log app starts"
 The repository currently includes these committed test suites:
 
 - `test/widget_test.dart` - smoke test that boots `QuickLogRoot`
+- `test/home_widget_service_test.dart` - verifies Android widget snapshot defaults, review priority, and shortcut labels
 - `test/settings_provider_test.dart` - verifies Travel Mode bundling and background-tracking setting normalization
 - `test/visit_detection_service_test.dart` - verifies travel-mode review entries and everyday dwell thresholds
 
@@ -52,7 +54,7 @@ flutter test --watch
 
 ### Unit Tests
 
-Location: `test/` (for example `test/settings_provider_test.dart` and `test/visit_detection_service_test.dart`)
+Location: `test/` (for example `test/home_widget_service_test.dart`, `test/settings_provider_test.dart`, and `test/visit_detection_service_test.dart`)
 
 Example:
 ```dart

@@ -9,6 +9,7 @@ An Android-first tag-based logging app for quick note-taking with smart tag sugg
 - 🏷️ **Tag-First Logging**: Create entries by selecting tags first, then optionally adding notes
 - 💡 **Smart Tag Suggestions**: Suggestions adapt to your time, day, and location patterns
 - 🔎 **Searchable Tag Picker**: Browse, search, and filter tags by category
+- 🏠 **Android Home Screen Widget**: Glance at your latest log, jump to review travel logs, and relaunch with recent tag shortcuts
 - 📍 **Optional Location Tracking**: Capture location labels and coordinates when enabled
 - ✈️ **Travel Mode Review Queue**: Bundle background tracking and automatic visit capture, then confirm or edit travel logs later
 - 🗺️ **Map View**: Review entries with location data on an interactive map
@@ -65,6 +66,16 @@ flutter build appbundle --release
 2. Let the app quietly save meaningful stops as travel logs that are marked **needs review**.
 3. Open **Entries** to review, edit, tag, or confirm those logs when you are ready.
 
+## 🏠 Android Widget
+
+1. Long-press your Android home screen and add the **Quick Log** widget.
+2. The widget defaults to a medium-size layout with:
+   - a status row that prioritizes pending travel-log reviews
+   - your latest saved entry summary
+   - up to 3 recent tag shortcuts once you have used tags in the app
+3. Use **New entry** to jump straight into recording, or **Review** to open the Entries tab when Travel Mode has logs waiting for cleanup.
+4. If you have not saved anything yet, the widget shows a sensible first-run prompt instead of seeded tags.
+
 ## 📱 Android Permissions
 
 The app requires the following permissions:
@@ -102,10 +113,11 @@ The app works without location access, but map features and automatic location c
 │   │   └── settings_screen.dart    # Theme, privacy, export/import
 │   ├── services/
 │   │   ├── data_export_service.dart
+│   │   ├── home_widget_service.dart
 │   │   └── tag_suggestion_service.dart
 │   └── widgets/
 │       └── tag_chip.dart           # Reusable tag widget
-├── android/                   # Android platform configuration
+├── android/                   # Android platform configuration + widget provider
 ├── test/                      # Unit and widget tests
 └── pubspec.yaml              # Dependencies
 ```

@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:quick_log_app/data/database_helper.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 import 'package:quick_log_app/services/visit_detection_service.dart';
 
 class AutoVisitProvider extends ChangeNotifier {
@@ -79,6 +80,7 @@ class AutoVisitProvider extends ChangeNotifier {
       _lastAutoLoggedVisit = nextEntry.copyWith(id: id);
       _candidate = null;
       _lastError = null;
+      await QuickLogHomeWidgetService.instance.sync();
       _statusMessage = nextEntry.locationLabel != null
           ? 'Saved ${nextEntry.locationLabel} for review.'
           : 'Saved a new visit for review.';

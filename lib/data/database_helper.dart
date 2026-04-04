@@ -136,6 +136,17 @@ class DatabaseHelper {
     return result.map((map) => LogTag.fromMap(map)).toList();
   }
 
+  Future<List<LogTag>> getRecentlyUsedTags({int limit = 8}) async {
+    final db = await database;
+    final result = await db.query(
+      'tags',
+      where: 'usageCount > 0',
+      orderBy: 'usageCount DESC, label ASC',
+      limit: limit,
+    );
+    return result.map((map) => LogTag.fromMap(map)).toList();
+  }
+
   Future<void> insertTag(LogTag tag) async {
     final db = await database;
     await db.insert(
@@ -177,6 +188,21 @@ class DatabaseHelper {
     return result.map((map) => LogEntry.fromMap(map)).toList();
   }
 
+  Future<LogEntry?> getLatestEntry() async {
+    final db = await database;
+    final result = await db.query(
+      'entries',
+      orderBy: 'createdAt DESC',
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return LogEntry.fromMap(result.first);
+  }
+
   Future<LogEntry?> getLatestAutoVisitEntry() async {
     final db = await database;
     final result = await db.query(
@@ -192,6 +218,19 @@ class DatabaseHelper {
     }
 
     return LogEntry.fromMap(result.first);
+  }
+
+  Future<int> getPendingReviewCount() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      '''
+      SELECT COUNT(*) AS pendingCount
+      FROM entries
+      WHERE reviewStatus = ?
+      ''',
+      [EntryReviewStatus.needsReview.name],
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   Future<List<LogEntry>> getEntriesByDateRange(

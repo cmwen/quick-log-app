@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:quick_log_app/data/database_helper.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/models/log_tag.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 
 class DataExportService {
   static final DataExportService instance = DataExportService._init();
@@ -318,6 +319,10 @@ class DataExportService {
           await DatabaseHelper.instance.insertEntry(entry);
           entriesImported++;
         }
+      }
+
+      if (entriesImported > 0) {
+        await QuickLogHomeWidgetService.instance.sync();
       }
 
       return ImportResult(

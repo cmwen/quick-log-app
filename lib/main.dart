@@ -5,13 +5,19 @@ import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/screens/main_screen.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 
-void main() {
-  runApp(const QuickLogRoot());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final initialLaunchAction = await QuickLogHomeWidgetService.instance
+      .consumeLaunchAction();
+  runApp(QuickLogRoot(initialLaunchAction: initialLaunchAction));
 }
 
 class QuickLogRoot extends StatelessWidget {
-  const QuickLogRoot({super.key});
+  const QuickLogRoot({super.key, this.initialLaunchAction});
+
+  final WidgetLaunchAction? initialLaunchAction;
 
   @override
   Widget build(BuildContext context) {
@@ -32,21 +38,21 @@ class QuickLogRoot extends StatelessWidget {
           update: (context, settingsProvider, locationProvider) {
             final provider = locationProvider ?? LocationTrackingProvider();
             provider.updateSettings(settingsProvider);
-            provider.updateAutoVisitProvider(
-              context.read<AutoVisitProvider>(),
-            );
+            provider.updateAutoVisitProvider(context.read<AutoVisitProvider>());
             return provider;
           },
         ),
       ],
-      child: const QuickLogApp(),
+      child: QuickLogApp(initialLaunchAction: initialLaunchAction),
     );
   }
 }
 
 /// Quick Log - A tag-first logging application
 class QuickLogApp extends StatelessWidget {
-  const QuickLogApp({super.key});
+  const QuickLogApp({super.key, this.initialLaunchAction});
+
+  final WidgetLaunchAction? initialLaunchAction;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +75,7 @@ class QuickLogApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: themeProvider.themeMode,
-      home: const MainScreen(),
+      home: MainScreen(initialLaunchAction: initialLaunchAction),
       debugShowCheckedModeBanner: false,
     );
   }

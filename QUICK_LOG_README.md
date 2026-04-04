@@ -44,6 +44,7 @@ A tag-first logging Android application for quick note-taking with optional loca
 ### User Experience
 - **Material Design 3** - Modern, beautiful UI
 - **Dark Mode** - Theme switching based on preference or system
+- **Android Home Screen Widget** - See your latest log, review queue, and recent tag shortcuts without opening the app first
 - **Swipe Actions** - Swipe left to delete, right to edit entries
 - **Offline First** - All data stored locally with SQLite
 - **No Login Required** - Privacy-focused, local-only storage
@@ -145,9 +146,20 @@ flutter build appbundle --release
    - Battery saver defaults for lower-power GPS updates
 3. Keep moving normally and let the app save meaningful stops as reviewable travel logs
 4. Open the **Entries** tab to:
-   - Confirm a travel log once it looks right
-   - Edit tags or notes before confirming
-   - Delete travel logs you do not want to keep
+    - Confirm a travel log once it looks right
+    - Edit tags or notes before confirming
+    - Delete travel logs you do not want to keep
+
+### Using the Android Home Screen Widget
+
+1. Long-press the Android home screen and add the **Quick Log** widget.
+2. Start with the default medium size for the best balance of status, shortcuts, and actions.
+3. Watch the status row:
+   - **Review** appears when Travel Mode has logs waiting for review
+   - otherwise the widget shows your last known location or a ready-to-log state
+4. Tap **New entry** to open the Record tab quickly.
+5. Tap **Review** to jump into the Entries tab when travel logs need cleanup.
+6. Tap a recent tag shortcut to open the Record tab with that tag preselected.
 
 ### Using the Map View
 
@@ -241,6 +253,7 @@ lib/
 │   └── settings_screen.dart  # Theme, privacy, travel, and export settings
 ├── services/
 │   ├── data_export_service.dart
+│   ├── home_widget_service.dart
 │   ├── tag_suggestion_service.dart
 │   └── visit_detection_service.dart
 └── widgets/

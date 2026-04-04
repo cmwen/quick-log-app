@@ -3,6 +3,7 @@ import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/models/log_tag.dart';
 import 'package:quick_log_app/data/database_helper.dart';
 import 'package:intl/intl.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -136,6 +137,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }) async {
     try {
       await DatabaseHelper.instance.updateEntry(entry);
+      await QuickLogHomeWidgetService.instance.sync();
       await _loadData();
       if (mounted) {
         ScaffoldMessenger.of(
@@ -185,6 +187,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
     if (entry.id != null) {
       try {
         await DatabaseHelper.instance.deleteEntry(entry.id!);
+        await QuickLogHomeWidgetService.instance.sync();
         await _loadData();
         if (mounted) {
           ScaffoldMessenger.of(

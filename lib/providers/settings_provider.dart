@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
   static const String _locationEnabledKey = 'location_enabled';
@@ -123,5 +126,6 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool(_batterySaverEnabledKey, _batterySaverEnabled);
     await prefs.setBool(_travelModeEnabledKey, _travelModeEnabled);
     await prefs.setBool(_autoVisitLoggingEnabledKey, _autoVisitLoggingEnabled);
+    unawaited(QuickLogHomeWidgetService.instance.sync());
   }
 }

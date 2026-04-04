@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
+import 'package:quick_log_app/services/home_widget_service.dart';
 
 class LocationTrackingProvider extends ChangeNotifier {
   static const String _latitudeKey = 'last_latitude';
@@ -219,6 +220,7 @@ class LocationTrackingProvider extends ChangeNotifier {
       _lastGeocodedLongitude = null;
       _lastGeocodedAt = null;
       await _persistCachedLocation();
+      unawaited(QuickLogHomeWidgetService.instance.sync());
     }
   }
 
@@ -314,6 +316,7 @@ class LocationTrackingProvider extends ChangeNotifier {
     Position position, {
     bool forceGeocode = false,
   }) async {
+    final previousLocationLabel = _locationLabel;
     _latitude = position.latitude;
     _longitude = position.longitude;
     _lastUpdatedAt = position.timestamp;
@@ -329,6 +332,9 @@ class LocationTrackingProvider extends ChangeNotifier {
     }
 
     await _persistCachedLocation();
+    if (previousLocationLabel != _locationLabel) {
+      unawaited(QuickLogHomeWidgetService.instance.sync());
+    }
     await _autoVisitProvider?.handlePosition(position);
     notifyListeners();
   }
