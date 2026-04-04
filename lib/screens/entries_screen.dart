@@ -125,10 +125,31 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }
 
   LogEntry _markReviewedIfNeeded(LogEntry entry) {
-    if (entry.isAutoTracked && entry.needsReview) {
+    if (entry.needsReview) {
       return entry.copyWith(reviewStatus: EntryReviewStatus.confirmed);
     }
     return entry;
+  }
+
+  String _entrySourceChipLabel(LogEntry entry) {
+    if (entry.isPhotoCapture) {
+      return 'Travel photo';
+    }
+    if (entry.isTravelCapture) {
+      return 'Travel log';
+    }
+    return 'Location only';
+  }
+
+  String _reviewStatusLabel(LogEntry entry) {
+    if (entry.isPhotoCapture) {
+      return entry.needsReview
+          ? 'Photo travel log pending review'
+          : 'Photo travel log confirmed';
+    }
+    return entry.needsReview
+        ? 'Travel log pending review'
+        : 'Travel log confirmed';
   }
 
   Future<void> _saveUpdatedEntry(
@@ -210,7 +231,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
     );
     final Set<String> selectedTags = Set.from(entry.tags);
     final canLeaveTagsEmpty = entry.hasLocation;
-    final isReviewFlow = entry.isAutoTracked && entry.needsReview;
+    final isReviewFlow = entry.needsReview;
 
     final result = await showDialog<bool>(
       context: context,
@@ -375,10 +396,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   }).toList(),
                 ),
 
-              if (entry.isAutoTracked) ...[
+              if (entry.isTravelCapture) ...[
                 const SizedBox(height: 24),
                 Text(
-                  'Visit Detection',
+                  entry.isPhotoCapture ? 'Travel Capture' : 'Visit Detection',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -389,10 +410,18 @@ class _EntriesScreenState extends State<EntriesScreen> {
                         : Icons.check_circle_outline,
                   ),
                   title: Text(
-                    entry.needsReview ? 'Needs review' : 'Confirmed visit',
+                    entry.isPhotoCapture
+                        ? (entry.needsReview
+                              ? 'Needs review'
+                              : 'Confirmed photo log')
+                        : (entry.needsReview
+                              ? 'Needs review'
+                              : 'Confirmed visit'),
                   ),
                   subtitle: Text(
                     [
+                      if (entry.isPhotoCapture)
+                        'Created from a new photo capture during Travel Mode',
                       if (entry.visitStartedAt != null)
                         'Started ${DateFormat('MMM d, y • h:mm a').format(entry.visitStartedAt!)}',
                       if (entry.visitEndedAt != null)
@@ -912,9 +941,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                                           ? [
                                               Chip(
                                                 label: Text(
-                                                  entry.isAutoTracked
-                                                      ? 'Auto visit'
-                                                      : 'Location only',
+                                                  _entrySourceChipLabel(entry),
                                                   style: const TextStyle(
                                                     fontSize: 12,
                                                   ),
@@ -978,7 +1005,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                                         ),
                                       ],
                                     ),
-                                  if (entry.isAutoTracked)
+                                  if (entry.isTravelCapture)
                                     Row(
                                       children: [
                                         Icon(
@@ -997,9 +1024,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
-                                            entry.needsReview
-                                                ? 'Travel log pending review'
-                                                : 'Travel log confirmed',
+                                            _reviewStatusLabel(entry),
                                           ),
                                         ),
                                       ],

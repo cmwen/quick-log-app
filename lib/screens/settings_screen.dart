@@ -4,6 +4,7 @@ import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
+import 'package:quick_log_app/providers/travel_media_provider.dart';
 import 'package:quick_log_app/services/data_export_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -162,6 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final locationProvider = Provider.of<LocationTrackingProvider>(context);
     final autoVisitProvider = Provider.of<AutoVisitProvider>(context);
+    final travelMediaProvider = Provider.of<TravelMediaProvider>(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,6 +238,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : null,
         ),
         SwitchListTile(
+          secondary: const Icon(Icons.add_a_photo_outlined),
+          title: const Text('Photo-triggered Travel Logs'),
+          subtitle: Text(
+            !travelMediaProvider.status.supported
+                ? 'Android-only travel capture from new photos'
+                : settingsProvider.travelModeEnabled
+                ? 'Watch Android media updates and save a reviewable travel log when you take a photo. Quick Log never stores the photo itself.'
+                : 'Available when Travel Mode is on',
+          ),
+          value: settingsProvider.photoTravelLoggingEnabled,
+          onChanged:
+              settingsProvider.travelModeEnabled &&
+                  travelMediaProvider.status.supported
+              ? (value) => _handlePhotoTravelLoggingChanged(
+                  context,
+                  settingsProvider,
+                  travelMediaProvider,
+                  value,
+                )
+              : null,
+        ),
+        SwitchListTile(
           secondary: const Icon(Icons.battery_saver_outlined),
           title: Text(
             settingsProvider.travelModeEnabled
@@ -269,6 +293,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               autoVisitProvider.lastError ?? autoVisitProvider.statusMessage,
             ),
           ),
+        if (settingsProvider.travelModeEnabled)
+          ListTile(
+            leading: const Icon(Icons.photo_camera_back_outlined),
+            title: const Text('Photo Capture Status'),
+            subtitle: Text(travelMediaProvider.statusMessage),
+            trailing: travelMediaProvider.isBusy
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    travelMediaProvider.status.monitoringActive
+                        ? Icons.visibility_outlined
+                        : travelMediaProvider.status.permissionGranted
+                        ? Icons.pause_circle_outline
+                        : Icons.lock_outline,
+                  ),
+          ),
         if (settingsProvider.backgroundTrackingEnabled)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -296,6 +339,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
               'Travel logs are saved as items needing review. Open Entries to confirm, edit, or tag them later.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        if (settingsProvider.photoTravelLoggingEnabled)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              'Photo-triggered travel logs use Android media metadata plus your latest cached location. If Quick Log cannot read photo metadata or has no recent location, the capture is skipped gracefully.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -440,6 +493,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             locationProvider.lastError ??
                 'Background location is required for travel auto-log mode.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handlePhotoTravelLoggingChanged(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    TravelMediaProvider travelMediaProvider,
+    bool enabled,
+  ) async {
+    if (!enabled) {
+      await settingsProvider.setPhotoTravelLoggingEnabled(false);
+      await travelMediaProvider.refreshStatus();
+      return;
+    }
+
+    final granted = await travelMediaProvider.requestPermission();
+    if (granted) {
+      await settingsProvider.setPhotoTravelLoggingEnabled(true);
+      return;
+    }
+
+    await settingsProvider.setPhotoTravelLoggingEnabled(false);
+
+    if (context.mounted) {
+      final permissionLabel = travelMediaProvider.status.permissionLabel;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Allow $permissionLabel access in Android settings to detect new photos during Travel Mode.',
           ),
           duration: const Duration(seconds: 4),
         ),

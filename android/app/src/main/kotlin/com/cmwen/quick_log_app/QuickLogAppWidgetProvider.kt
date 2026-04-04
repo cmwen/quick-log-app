@@ -41,12 +41,49 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
                 Context.MODE_PRIVATE
             )
 
-            val views = RemoteViews(context.packageName, R.layout.quick_log_widget)
+            val compactWidget = isCompactWidget(appWidgetManager, appWidgetId)
+            val views = RemoteViews(
+                context.packageName,
+                if (compactWidget) R.layout.quick_log_widget_compact else R.layout.quick_log_widget
+            )
 
             views.setTextViewText(
                 R.id.widget_status,
                 prefs.getString(QuickLogWidgetBridge.keyStatusLine, "Ready to log")
             )
+
+            if (compactWidget) {
+                views.setOnClickPendingIntent(
+                    R.id.widget_header,
+                    createLaunchPendingIntent(
+                        context = context,
+                        destination = "quickLocation",
+                        appWidgetId = appWidgetId,
+                        requestKey = "compactHeader"
+                    )
+                )
+                views.setOnClickPendingIntent(
+                    R.id.widget_primary_action,
+                    createLaunchPendingIntent(
+                        context = context,
+                        destination = "quickLocation",
+                        appWidgetId = appWidgetId,
+                        requestKey = "compactPrimary"
+                    )
+                )
+                views.setOnClickPendingIntent(
+                    R.id.widget_secondary_action,
+                    createLaunchPendingIntent(
+                        context = context,
+                        destination = "entries",
+                        appWidgetId = appWidgetId,
+                        requestKey = "compactSecondary"
+                    )
+                )
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+                return
+            }
+
             views.setTextViewText(
                 R.id.widget_content_title,
                 prefs.getString(QuickLogWidgetBridge.keyContentTitle, "Start your first log")
@@ -126,6 +163,16 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
             )
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun isCompactWidget(
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int
+        ): Boolean {
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            return minWidth < 180 || minHeight < 120
         }
 
         private fun bindShortcutButton(

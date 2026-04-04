@@ -82,5 +82,23 @@ void main() {
         expect(snapshot.contentBody, startsWith('Saved '));
       },
     );
+
+    test('uses travel photo copy for photo-triggered entries', () {
+      final snapshot = HomeWidgetSnapshotBuilder.build(
+        pendingReviewCount: 0,
+        latestEntry: LogEntry(
+          createdAt: DateTime(2026, 4, 4, 10, 45),
+          source: EntrySource.autoPhoto,
+          locationLabel: 'Museum District',
+        ),
+        shortcutTags: const <LogTag>[],
+        tagLabels: const <String, String>{},
+        locationEnabled: true,
+        locationLabel: 'Museum District',
+      );
+
+      expect(snapshot.contentTitle, 'Travel photo');
+      expect(snapshot.contentBody, 'Museum District');
+    });
   });
 }

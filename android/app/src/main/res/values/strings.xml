@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="quick_log_widget_description">Quickly open Quick Log, review travel logs, and relaunch with recent tags.</string>
+    <string name="quick_log_widget_description">Quickly log your current location, review travel logs, and relaunch with recent tags.</string>
 </resources>

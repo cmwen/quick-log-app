@@ -1,4 +1,4 @@
-enum EntrySource { manual, autoVisit }
+enum EntrySource { manual, autoVisit, autoPhoto }
 
 enum EntryReviewStatus { none, needsReview, confirmed }
 
@@ -33,6 +33,10 @@ class LogEntry {
 
   bool get hasLocation => latitude != null && longitude != null;
   bool get isAutoTracked => source == EntrySource.autoVisit;
+  bool get isPhotoCapture => source == EntrySource.autoPhoto;
+  bool get isTravelCapture =>
+      source == EntrySource.autoVisit || source == EntrySource.autoPhoto;
+  bool get isAutoCaptured => source != EntrySource.manual;
   bool get needsReview => reviewStatus == EntryReviewStatus.needsReview;
   bool get isReviewConfirmed => reviewStatus == EntryReviewStatus.confirmed;
 

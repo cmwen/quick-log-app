@@ -12,12 +12,15 @@ class SettingsProvider extends ChangeNotifier {
   static const String _travelModeEnabledKey = 'travel_mode_enabled';
   static const String _autoVisitLoggingEnabledKey =
       'auto_visit_logging_enabled';
+  static const String _photoTravelLoggingEnabledKey =
+      'photo_travel_logging_enabled';
 
   bool _locationEnabled = true;
   bool _backgroundTrackingEnabled = false;
   bool _batterySaverEnabled = true;
   bool _travelModeEnabled = false;
   bool _autoVisitLoggingEnabled = false;
+  bool _photoTravelLoggingEnabled = false;
   bool _isLoaded = false;
 
   bool get locationEnabled => _locationEnabled;
@@ -25,6 +28,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get batterySaverEnabled => _batterySaverEnabled;
   bool get travelModeEnabled => _travelModeEnabled;
   bool get autoVisitLoggingEnabled => _autoVisitLoggingEnabled;
+  bool get photoTravelLoggingEnabled => _photoTravelLoggingEnabled;
   bool get isLoaded => _isLoaded;
 
   SettingsProvider() {
@@ -40,6 +44,8 @@ class SettingsProvider extends ChangeNotifier {
     _travelModeEnabled = prefs.getBool(_travelModeEnabledKey) ?? false;
     _autoVisitLoggingEnabled =
         prefs.getBool(_autoVisitLoggingEnabledKey) ?? false;
+    _photoTravelLoggingEnabled =
+        prefs.getBool(_photoTravelLoggingEnabledKey) ?? false;
     _normalizeState();
     _isLoaded = true;
     notifyListeners();
@@ -57,6 +63,7 @@ class SettingsProvider extends ChangeNotifier {
     if (!enabled) {
       _travelModeEnabled = false;
       _autoVisitLoggingEnabled = false;
+      _photoTravelLoggingEnabled = false;
     }
     _normalizeState();
     notifyListeners();
@@ -76,6 +83,7 @@ class SettingsProvider extends ChangeNotifier {
     } else {
       _backgroundTrackingEnabled = false;
       _autoVisitLoggingEnabled = false;
+      _photoTravelLoggingEnabled = false;
     }
     _normalizeState();
     notifyListeners();
@@ -88,6 +96,19 @@ class SettingsProvider extends ChangeNotifier {
       _batterySaverEnabled = true;
     } else {
       _travelModeEnabled = false;
+      _photoTravelLoggingEnabled = false;
+    }
+    _normalizeState();
+    notifyListeners();
+    await _persistSettings();
+  }
+
+  Future<void> setPhotoTravelLoggingEnabled(bool enabled) async {
+    _photoTravelLoggingEnabled = enabled;
+    if (enabled) {
+      _batterySaverEnabled = true;
+      _travelModeEnabled = true;
+      _autoVisitLoggingEnabled = true;
     }
     _normalizeState();
     notifyListeners();
@@ -99,10 +120,13 @@ class SettingsProvider extends ChangeNotifier {
       _backgroundTrackingEnabled = false;
       _travelModeEnabled = false;
       _autoVisitLoggingEnabled = false;
+      _photoTravelLoggingEnabled = false;
       return;
     }
 
-    if (_travelModeEnabled || _autoVisitLoggingEnabled) {
+    if (_travelModeEnabled ||
+        _autoVisitLoggingEnabled ||
+        _photoTravelLoggingEnabled) {
       _locationEnabled = true;
       _backgroundTrackingEnabled = true;
       _travelModeEnabled = true;
@@ -113,6 +137,7 @@ class SettingsProvider extends ChangeNotifier {
     if (!_backgroundTrackingEnabled) {
       _travelModeEnabled = false;
       _autoVisitLoggingEnabled = false;
+      _photoTravelLoggingEnabled = false;
     }
   }
 
@@ -126,6 +151,10 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool(_batterySaverEnabledKey, _batterySaverEnabled);
     await prefs.setBool(_travelModeEnabledKey, _travelModeEnabled);
     await prefs.setBool(_autoVisitLoggingEnabledKey, _autoVisitLoggingEnabled);
+    await prefs.setBool(
+      _photoTravelLoggingEnabledKey,
+      _photoTravelLoggingEnabled,
+    );
     unawaited(QuickLogHomeWidgetService.instance.sync());
   }
 }

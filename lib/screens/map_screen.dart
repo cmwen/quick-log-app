@@ -85,7 +85,11 @@ class _MapScreenState extends State<MapScreen> {
               const SizedBox(height: 8),
               if (entry.tags.isEmpty)
                 Text(
-                  entry.isAutoTracked ? 'Auto-tracked visit' : 'No tags',
+                  entry.isPhotoCapture
+                      ? 'Photo-triggered travel log'
+                      : entry.isTravelCapture
+                      ? 'Auto-tracked visit'
+                      : 'No tags',
                   style: Theme.of(context).textTheme.bodyMedium,
                 )
               else
@@ -132,10 +136,10 @@ class _MapScreenState extends State<MapScreen> {
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
-              if (entry.isAutoTracked) ...[
+              if (entry.isTravelCapture) ...[
                 const SizedBox(height: 16),
                 Text(
-                  'Visit Detection',
+                  entry.isPhotoCapture ? 'Travel Capture' : 'Visit Detection',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -144,7 +148,9 @@ class _MapScreenState extends State<MapScreen> {
                     entry.reviewStatus == EntryReviewStatus.needsReview
                         ? 'Needs review'
                         : 'Confirmed',
-                    if (entry.visitDurationMinutes != null)
+                    if (entry.isPhotoCapture)
+                      'Photo-triggered'
+                    else if (entry.visitDurationMinutes != null)
                       '${entry.visitDurationMinutes} min stop',
                   ].join(' • '),
                 ),

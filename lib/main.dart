@@ -4,6 +4,7 @@ import 'package:quick_log_app/providers/auto_visit_provider.dart';
 import 'package:quick_log_app/providers/location_tracking_provider.dart';
 import 'package:quick_log_app/providers/theme_provider.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
+import 'package:quick_log_app/providers/travel_media_provider.dart';
 import 'package:quick_log_app/screens/main_screen.dart';
 import 'package:quick_log_app/services/home_widget_service.dart';
 
@@ -29,6 +30,14 @@ class QuickLogRoot extends StatelessWidget {
           create: (_) => AutoVisitProvider(),
           update: (_, settingsProvider, autoVisitProvider) {
             final provider = autoVisitProvider ?? AutoVisitProvider();
+            provider.updateSettings(settingsProvider);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider<SettingsProvider, TravelMediaProvider>(
+          create: (_) => TravelMediaProvider(),
+          update: (_, settingsProvider, travelMediaProvider) {
+            final provider = travelMediaProvider ?? TravelMediaProvider();
             provider.updateSettings(settingsProvider);
             return provider;
           },

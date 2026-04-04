@@ -9,7 +9,7 @@ import 'package:quick_log_app/data/database_helper.dart';
 import 'package:quick_log_app/models/log_entry.dart';
 import 'package:quick_log_app/models/log_tag.dart';
 
-enum WidgetLaunchDestination { record, entries }
+enum WidgetLaunchDestination { record, entries, quickLocation }
 
 class WidgetLaunchAction {
   final WidgetLaunchDestination destination;
@@ -161,7 +161,11 @@ class HomeWidgetSnapshotBuilder {
       }
     }
 
-    if (entry.isAutoTracked) {
+    if (entry.isPhotoCapture) {
+      return 'Travel photo';
+    }
+
+    if (entry.isTravelCapture) {
       return 'Travel log';
     }
 

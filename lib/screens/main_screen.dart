@@ -14,6 +14,7 @@ import 'package:quick_log_app/screens/settings_screen.dart';
 import 'package:quick_log_app/widgets/tag_chip.dart';
 import 'package:quick_log_app/providers/settings_provider.dart';
 import 'package:quick_log_app/services/home_widget_service.dart';
+import 'package:quick_log_app/services/log_entry_service.dart';
 import 'package:quick_log_app/services/tag_suggestion_service.dart';
 
 class MainScreen extends StatefulWidget {
@@ -33,6 +34,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   List<LogTag> _allTags = [];
   bool _isLoading = true;
   int _selectedIndex = 0;
+  bool _isProcessingWidgetLocationAction = false;
 
   @override
   void initState() {
@@ -179,7 +181,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
 
     try {
-      await DatabaseHelper.instance.insertEntry(entry);
+      await LogEntryService.instance.save(entry);
 
       // Reset form
       setState(() {
@@ -189,7 +191,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
       await _loadTags(); // Refresh to update usage counts
       await _loadSuggestedTags(); // Refresh suggestions based on new entry
-      await QuickLogHomeWidgetService.instance.sync();
 
       if (mounted) {
         messenger.showSnackBar(
@@ -234,9 +235,104 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         ? 1
         : 0;
 
+    if (action.destination == WidgetLaunchDestination.quickLocation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_handleQuickLocationLaunchAction());
+      });
+      return;
+    }
+
     if (action.tagId != null &&
         action.destination == WidgetLaunchDestination.record) {
       _selectedTags.add(action.tagId!);
+    }
+  }
+
+  Future<void> _handleQuickLocationLaunchAction() async {
+    if (!mounted || _isProcessingWidgetLocationAction) {
+      return;
+    }
+
+    _isProcessingWidgetLocationAction = true;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
+    final locationProvider = Provider.of<LocationTrackingProvider>(
+      context,
+      listen: false,
+    );
+
+    try {
+      setState(() => _selectedIndex = 0);
+
+      if (!settingsProvider.locationEnabled) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Enable location tracking in Settings to log here.'),
+          ),
+        );
+        return;
+      }
+
+      if (!locationProvider.hasLocation) {
+        await locationProvider.refreshLocation(promptForPermission: true);
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!locationProvider.hasLocation) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              locationProvider.lastError ??
+                  'Current location is unavailable. Refresh location and try again.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final savedEntry = await LogEntryService.instance.save(
+        LogEntry(
+          createdAt: DateTime.now(),
+          latitude: locationProvider.latitude,
+          longitude: locationProvider.longitude,
+          locationLabel: locationProvider.locationLabel,
+        ),
+      );
+
+      await _loadTags();
+      await _loadSuggestedTags();
+
+      if (!mounted) {
+        return;
+      }
+
+      final locationLabel = savedEntry.locationLabel?.trim();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            locationLabel != null && locationLabel.isNotEmpty
+                ? 'Logged current location: $locationLabel'
+                : 'Current location logged',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not save current location: $error')),
+      );
+    } finally {
+      _isProcessingWidgetLocationAction = false;
     }
   }
 

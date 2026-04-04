@@ -1,11 +1,14 @@
 package com.cmwen.quick_log_app
 
+import androidx.core.app.ActivityCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var pendingTravelCapturePermissionResult: MethodChannel.Result? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
@@ -19,6 +22,27 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "consumeLaunchAction" -> result.success(consumeLaunchAction())
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            TravelCaptureBridge.channelName
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getStatus" -> result.success(TravelCaptureBridge.buildStatus(this))
+                "requestPermission" -> requestTravelCapturePermission(result)
+                "setMonitoringEnabled" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    TravelCaptureBridge.setMonitoringRequested(this, enabled)
+                    if (enabled && TravelCaptureBridge.hasPermission(this)) {
+                        TravelCaptureBridge.startMonitoring(this)
+                    } else {
+                        TravelCaptureBridge.stopMonitoring(this)
+                    }
+                    result.success(TravelCaptureBridge.buildStatus(this))
+                }
                 else -> result.notImplemented()
             }
         }
@@ -92,5 +116,58 @@ class MainActivity : FlutterActivity() {
         currentIntent.removeExtra(QuickLogWidgetBridge.extraDestination)
         currentIntent.removeExtra(QuickLogWidgetBridge.extraTagId)
         return action
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode != travelCapturePermissionRequestCode) {
+            return
+        }
+
+        if (TravelCaptureBridge.isMonitoringRequested(this) &&
+            TravelCaptureBridge.hasPermission(this)
+        ) {
+            TravelCaptureBridge.startMonitoring(this)
+        } else {
+            TravelCaptureBridge.stopMonitoring(this)
+        }
+
+        pendingTravelCapturePermissionResult?.success(
+            TravelCaptureBridge.buildStatus(this)
+        )
+        pendingTravelCapturePermissionResult = null
+    }
+
+    private fun requestTravelCapturePermission(result: MethodChannel.Result) {
+        val permission = TravelCaptureBridge.requiredPermission()
+        if (permission == null || TravelCaptureBridge.hasPermission(this)) {
+            result.success(TravelCaptureBridge.buildStatus(this))
+            return
+        }
+
+        if (pendingTravelCapturePermissionResult != null) {
+            result.error(
+                "permission_request_in_progress",
+                "A photo permission request is already in progress.",
+                null
+            )
+            return
+        }
+
+        pendingTravelCapturePermissionResult = result
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(permission),
+            travelCapturePermissionRequestCode
+        )
+    }
+
+    companion object {
+        private const val travelCapturePermissionRequestCode = 4201
     }
 }
