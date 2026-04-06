@@ -49,12 +49,12 @@ dependencies:
   latlong2: ^0.9.1
 
   # Data Export/Import
-  share_plus: ^12.0.1
-  file_picker: ^10.3.10
+  share_plus: ^12.0.2
+  file_picker: ^11.0.1
 
   # Settings/Preferences
-  shared_preferences: ^2.5.4
-  package_info_plus: ^9.0.0
+  shared_preferences: ^2.5.5
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:
