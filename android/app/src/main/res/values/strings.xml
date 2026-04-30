@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="quick_log_widget_description">Quickly log your current location, review travel logs, and relaunch with recent tags.</string>
+    <string name="quick_log_travel_widget_label">Quick Log Travel</string>
+    <string name="quick_log_tags_widget_label">Quick Log Tags</string>
+    <string name="quick_log_travel_widget_description">Log your current location quickly and jump into travel review.</string>
+    <string name="quick_log_tags_widget_description">Start a new entry from your recent tags.</string>
+    <string name="quick_log_travel_widget_title">Travel mode</string>
+    <string name="quick_log_tags_widget_title">Quick tags</string>
+    <string name="quick_log_widget_primary_travel">Log here</string>
+    <string name="quick_log_widget_primary_entry">New entry</string>
+    <string name="quick_log_widget_secondary_entries">Entries</string>
 </resources>

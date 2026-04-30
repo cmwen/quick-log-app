@@ -37,35 +37,60 @@ class WidgetShortcut {
   const WidgetShortcut({required this.id, required this.label});
 }
 
-class HomeWidgetSnapshot {
+class TravelHomeWidgetSnapshot {
+  final String statusLine;
+  final String contentTitle;
+  final String contentBody;
+  final String secondaryActionLabel;
+
+  const TravelHomeWidgetSnapshot({
+    required this.statusLine,
+    required this.contentTitle,
+    required this.contentBody,
+    required this.secondaryActionLabel,
+  });
+}
+
+class TagsHomeWidgetSnapshot {
   final String statusLine;
   final String contentTitle;
   final String contentBody;
   final String secondaryActionLabel;
   final List<WidgetShortcut> shortcuts;
 
-  const HomeWidgetSnapshot({
+  const TagsHomeWidgetSnapshot({
     required this.statusLine,
     required this.contentTitle,
     required this.contentBody,
     required this.secondaryActionLabel,
     required this.shortcuts,
   });
+}
+
+class HomeWidgetSnapshot {
+  final TravelHomeWidgetSnapshot travel;
+  final TagsHomeWidgetSnapshot tags;
+
+  const HomeWidgetSnapshot({required this.travel, required this.tags});
 
   Map<String, Object?> toMap() {
     final paddedShortcuts = [
-      ...shortcuts.take(3),
+      ...tags.shortcuts.take(3),
       ...List<WidgetShortcut>.filled(
-        3 - shortcuts.take(3).length,
+        3 - tags.shortcuts.take(3).length,
         const WidgetShortcut(id: '', label: ''),
       ),
     ];
 
     return {
-      'statusLine': statusLine,
-      'contentTitle': contentTitle,
-      'contentBody': contentBody,
-      'secondaryActionLabel': secondaryActionLabel,
+      'travelStatusLine': travel.statusLine,
+      'travelContentTitle': travel.contentTitle,
+      'travelContentBody': travel.contentBody,
+      'travelSecondaryActionLabel': travel.secondaryActionLabel,
+      'tagsStatusLine': tags.statusLine,
+      'tagsContentTitle': tags.contentTitle,
+      'tagsContentBody': tags.contentBody,
+      'tagsSecondaryActionLabel': tags.secondaryActionLabel,
       'shortcut1Id': paddedShortcuts[0].id,
       'shortcut1Label': paddedShortcuts[0].label,
       'shortcut2Id': paddedShortcuts[1].id,
@@ -81,6 +106,12 @@ class HomeWidgetSnapshotBuilder {
   static const String _emptyStateTitle = 'Start your first log';
   static const String _emptyStateBody =
       'Open Quick Log to choose tags and save your first entry.';
+  static const String _travelReadyTitle = 'Log current location';
+  static const String _travelReviewTitle = 'Review travel logs';
+  static const String _travelDisabledBody =
+      'Enable location tracking in Settings to log your current place.';
+  static const String _travelReadyBody =
+      'Open Quick Log to save where you are right now.';
 
   const HomeWidgetSnapshotBuilder._();
 
@@ -98,8 +129,91 @@ class HomeWidgetSnapshotBuilder {
       locationLabel: locationLabel,
     );
 
+    return HomeWidgetSnapshot(
+      travel: _buildTravelSnapshot(
+        pendingReviewCount: pendingReviewCount,
+        latestEntry: latestEntry,
+        locationEnabled: locationEnabled,
+        locationLabel: locationLabel,
+        statusLine: statusLine,
+      ),
+      tags: _buildTagsSnapshot(
+        pendingReviewCount: pendingReviewCount,
+        latestEntry: latestEntry,
+        shortcutTags: shortcutTags,
+        tagLabels: tagLabels,
+        statusLine: statusLine,
+      ),
+    );
+  }
+
+  static TravelHomeWidgetSnapshot _buildTravelSnapshot({
+    required int pendingReviewCount,
+    required LogEntry? latestEntry,
+    required bool locationEnabled,
+    required String? locationLabel,
+    required String statusLine,
+  }) {
+    final secondaryActionLabel = pendingReviewCount > 0 ? 'Review' : 'Entries';
+
+    if (pendingReviewCount > 0) {
+      final reviewBody = pendingReviewCount == 1
+          ? 'Review the latest auto-detected stop before your next trip.'
+          : 'Review your recent auto-detected stops before your next trip.';
+      return TravelHomeWidgetSnapshot(
+        statusLine: statusLine,
+        contentTitle: _travelReviewTitle,
+        contentBody: reviewBody,
+        secondaryActionLabel: secondaryActionLabel,
+      );
+    }
+
+    if (!locationEnabled) {
+      return TravelHomeWidgetSnapshot(
+        statusLine: statusLine,
+        contentTitle: _travelReadyTitle,
+        contentBody: _travelDisabledBody,
+        secondaryActionLabel: secondaryActionLabel,
+      );
+    }
+
+    final resolvedLocationLabel = locationLabel?.trim();
+    if (resolvedLocationLabel != null && resolvedLocationLabel.isNotEmpty) {
+      return TravelHomeWidgetSnapshot(
+        statusLine: statusLine,
+        contentTitle: _travelReadyTitle,
+        contentBody: 'Save an entry for $resolvedLocationLabel.',
+        secondaryActionLabel: secondaryActionLabel,
+      );
+    }
+
+    final latestLocationLabel = latestEntry?.locationLabel?.trim();
+    if (latestLocationLabel != null && latestLocationLabel.isNotEmpty) {
+      return TravelHomeWidgetSnapshot(
+        statusLine: statusLine,
+        contentTitle: _travelReadyTitle,
+        contentBody: 'Last place: $latestLocationLabel',
+        secondaryActionLabel: secondaryActionLabel,
+      );
+    }
+
+    return TravelHomeWidgetSnapshot(
+      statusLine: statusLine,
+      contentTitle: _travelReadyTitle,
+      contentBody: _travelReadyBody,
+      secondaryActionLabel: secondaryActionLabel,
+    );
+  }
+
+  static TagsHomeWidgetSnapshot _buildTagsSnapshot({
+    required int pendingReviewCount,
+    required LogEntry? latestEntry,
+    required List<LogTag> shortcutTags,
+    required Map<String, String> tagLabels,
+    required String statusLine,
+  }) {
     if (latestEntry == null) {
-      return HomeWidgetSnapshot(
+      return TagsHomeWidgetSnapshot(
         statusLine: statusLine,
         contentTitle: _emptyStateTitle,
         contentBody: _emptyStateBody,
@@ -108,7 +222,7 @@ class HomeWidgetSnapshotBuilder {
       );
     }
 
-    return HomeWidgetSnapshot(
+    return TagsHomeWidgetSnapshot(
       statusLine: statusLine,
       contentTitle: _buildEntryTitle(latestEntry, tagLabels),
       contentBody: _buildEntryBody(latestEntry),

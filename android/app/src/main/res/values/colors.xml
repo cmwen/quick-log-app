@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#2196F3</color>
+    <color name="widget_surface">#F8FAFC</color>
+    <color name="widget_on_surface">#0F172A</color>
+    <color name="widget_muted_text">#475569</color>
+    <color name="widget_outline">#D7E3F4</color>
+    <color name="widget_primary">#2563EB</color>
+    <color name="widget_on_primary">#FFFFFF</color>
+    <color name="widget_secondary_surface">#E2E8F0</color>
+    <color name="widget_on_secondary_surface">#0F172A</color>
+    <color name="widget_chip_surface">#E8F1FF</color>
+    <color name="widget_on_chip_surface">#0F172A</color>
 </resources>

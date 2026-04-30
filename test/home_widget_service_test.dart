@@ -15,14 +15,19 @@ void main() {
         locationLabel: null,
       );
 
-      expect(snapshot.statusLine, 'Location off');
-      expect(snapshot.contentTitle, 'Start your first log');
+      expect(snapshot.travel.statusLine, 'Location off');
+      expect(snapshot.travel.contentTitle, 'Log current location');
       expect(
-        snapshot.contentBody,
+        snapshot.travel.contentBody,
+        'Enable location tracking in Settings to log your current place.',
+      );
+      expect(snapshot.tags.contentTitle, 'Start your first log');
+      expect(
+        snapshot.tags.contentBody,
         'Open Quick Log to choose tags and save your first entry.',
       );
-      expect(snapshot.secondaryActionLabel, 'Entries');
-      expect(snapshot.shortcuts, isEmpty);
+      expect(snapshot.tags.secondaryActionLabel, 'Entries');
+      expect(snapshot.tags.shortcuts, isEmpty);
     });
 
     test('prioritizes pending review status and recent tag shortcuts', () {
@@ -52,11 +57,13 @@ void main() {
         locationLabel: 'Downtown',
       );
 
-      expect(snapshot.statusLine, '2 travel logs need review');
-      expect(snapshot.contentTitle, 'Work +1');
-      expect(snapshot.contentBody, 'Coffee and planning');
-      expect(snapshot.secondaryActionLabel, 'Review');
-      expect(snapshot.shortcuts.map((shortcut) => shortcut.label), [
+      expect(snapshot.travel.statusLine, '2 travel logs need review');
+      expect(snapshot.travel.contentTitle, 'Review travel logs');
+      expect(snapshot.travel.secondaryActionLabel, 'Review');
+      expect(snapshot.tags.contentTitle, 'Work +1');
+      expect(snapshot.tags.contentBody, 'Coffee and planning');
+      expect(snapshot.tags.secondaryActionLabel, 'Review');
+      expect(snapshot.tags.shortcuts.map((shortcut) => shortcut.label), [
         'Work',
         'Focused',
       ]);
@@ -77,9 +84,10 @@ void main() {
           locationLabel: 'Terminal 2',
         );
 
-        expect(snapshot.statusLine, 'Terminal 2');
-        expect(snapshot.contentTitle, 'Travel log');
-        expect(snapshot.contentBody, startsWith('Saved '));
+        expect(snapshot.travel.statusLine, 'Terminal 2');
+        expect(snapshot.travel.contentBody, 'Save an entry for Terminal 2.');
+        expect(snapshot.tags.contentTitle, 'Travel log');
+        expect(snapshot.tags.contentBody, startsWith('Saved '));
       },
     );
 
@@ -97,8 +105,9 @@ void main() {
         locationLabel: 'Museum District',
       );
 
-      expect(snapshot.contentTitle, 'Travel photo');
-      expect(snapshot.contentBody, 'Museum District');
+      expect(snapshot.travel.contentBody, 'Save an entry for Museum District.');
+      expect(snapshot.tags.contentTitle, 'Travel photo');
+      expect(snapshot.tags.contentBody, 'Museum District');
     });
   });
 }

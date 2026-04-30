@@ -293,12 +293,37 @@ object TravelCaptureBridge {
             )
 
             prefs.edit()
-                .putString(QuickLogWidgetBridge.keyStatusLine, snapshot["statusLine"] as String)
-                .putString(QuickLogWidgetBridge.keyContentTitle, snapshot["contentTitle"] as String)
-                .putString(QuickLogWidgetBridge.keyContentBody, snapshot["contentBody"] as String)
                 .putString(
-                    QuickLogWidgetBridge.keySecondaryActionLabel,
-                    snapshot["secondaryActionLabel"] as String
+                    QuickLogWidgetBridge.keyTravelStatusLine,
+                    snapshot[QuickLogWidgetBridge.keyTravelStatusLine] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTravelContentTitle,
+                    snapshot[QuickLogWidgetBridge.keyTravelContentTitle] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTravelContentBody,
+                    snapshot[QuickLogWidgetBridge.keyTravelContentBody] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTravelSecondaryActionLabel,
+                    snapshot[QuickLogWidgetBridge.keyTravelSecondaryActionLabel] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTagsStatusLine,
+                    snapshot[QuickLogWidgetBridge.keyTagsStatusLine] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTagsContentTitle,
+                    snapshot[QuickLogWidgetBridge.keyTagsContentTitle] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTagsContentBody,
+                    snapshot[QuickLogWidgetBridge.keyTagsContentBody] as String
+                )
+                .putString(
+                    QuickLogWidgetBridge.keyTagsSecondaryActionLabel,
+                    snapshot[QuickLogWidgetBridge.keyTagsSecondaryActionLabel] as String
                 )
                 .putString(QuickLogWidgetBridge.keyShortcut1Id, snapshot["shortcut1Id"] as String)
                 .putString(
@@ -318,6 +343,7 @@ object TravelCaptureBridge {
                 .apply()
 
             QuickLogAppWidgetProvider.updateAll(context)
+            QuickLogTagsAppWidgetProvider.updateAll(context)
         } finally {
             if (existingDb == null) {
                 db.close()
@@ -420,10 +446,28 @@ object TravelCaptureBridge {
 
         if (latestEntry == null) {
             return linkedMapOf(
-                "statusLine" to statusLine,
-                "contentTitle" to "Start your first log",
-                "contentBody" to "Open Quick Log to choose tags and save your first entry.",
-                "secondaryActionLabel" to if (pendingReviewCount > 0) "Review" else "Entries",
+                QuickLogWidgetBridge.keyTravelStatusLine to statusLine,
+                QuickLogWidgetBridge.keyTravelContentTitle to "Log current location",
+                QuickLogWidgetBridge.keyTravelContentBody to if (locationEnabled) {
+                    locationLabel?.takeIf(String::isNotBlank)?.let { "Save an entry for $it." }
+                        ?: "Open Quick Log to save where you are right now."
+                } else {
+                    "Enable location tracking in Settings to log your current place."
+                },
+                QuickLogWidgetBridge.keyTravelSecondaryActionLabel to if (pendingReviewCount > 0) {
+                    "Review"
+                } else {
+                    "Entries"
+                },
+                QuickLogWidgetBridge.keyTagsStatusLine to statusLine,
+                QuickLogWidgetBridge.keyTagsContentTitle to "Start your first log",
+                QuickLogWidgetBridge.keyTagsContentBody to
+                    "Open Quick Log to choose tags and save your first entry.",
+                QuickLogWidgetBridge.keyTagsSecondaryActionLabel to if (pendingReviewCount > 0) {
+                    "Review"
+                } else {
+                    "Entries"
+                },
                 "shortcut1Id" to shortcuts.getOrNull(0)?.first.orEmpty(),
                 "shortcut1Label" to shortcuts.getOrNull(0)?.second.orEmpty(),
                 "shortcut2Id" to shortcuts.getOrNull(1)?.first.orEmpty(),
@@ -455,11 +499,43 @@ object TravelCaptureBridge {
             ?: latestEntry.locationLabel?.trim()?.takeIf(String::isNotEmpty)
             ?: "Saved ${SimpleDateFormat("MMM d • h:mm a", Locale.getDefault()).format(Date(latestEntry.createdAtMillis))}"
 
+        val travelContentBody = when {
+            pendingReviewCount > 0 && pendingReviewCount == 1 ->
+                "Review the latest auto-detected stop before your next trip."
+            pendingReviewCount > 1 ->
+                "Review your recent auto-detected stops before your next trip."
+            !locationEnabled ->
+                "Enable location tracking in Settings to log your current place."
+            !locationLabel.isNullOrBlank() ->
+                "Save an entry for $locationLabel."
+            !latestEntry.locationLabel.isNullOrBlank() ->
+                "Last place: ${latestEntry.locationLabel}"
+            else -> "Open Quick Log to save where you are right now."
+        }
+
+        val travelContentTitle = if (pendingReviewCount > 0) {
+            "Review travel logs"
+        } else {
+            "Log current location"
+        }
+
         return linkedMapOf(
-            "statusLine" to statusLine,
-            "contentTitle" to title,
-            "contentBody" to contentBody,
-            "secondaryActionLabel" to if (pendingReviewCount > 0) "Review" else "Entries",
+            QuickLogWidgetBridge.keyTravelStatusLine to statusLine,
+            QuickLogWidgetBridge.keyTravelContentTitle to travelContentTitle,
+            QuickLogWidgetBridge.keyTravelContentBody to travelContentBody,
+            QuickLogWidgetBridge.keyTravelSecondaryActionLabel to if (pendingReviewCount > 0) {
+                "Review"
+            } else {
+                "Entries"
+            },
+            QuickLogWidgetBridge.keyTagsStatusLine to statusLine,
+            QuickLogWidgetBridge.keyTagsContentTitle to title,
+            QuickLogWidgetBridge.keyTagsContentBody to contentBody,
+            QuickLogWidgetBridge.keyTagsSecondaryActionLabel to if (pendingReviewCount > 0) {
+                "Review"
+            } else {
+                "Entries"
+            },
             "shortcut1Id" to shortcuts.getOrNull(0)?.first.orEmpty(),
             "shortcut1Label" to shortcuts.getOrNull(0)?.second.orEmpty(),
             "shortcut2Id" to shortcuts.getOrNull(1)?.first.orEmpty(),

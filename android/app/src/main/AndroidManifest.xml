@@ -48,13 +48,25 @@
             android:value="2" />
         <receiver
             android:name=".QuickLogAppWidgetProvider"
-            android:exported="false">
+            android:exported="false"
+            android:label="@string/quick_log_travel_widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/quick_log_widget_info" />
+                android:resource="@xml/quick_log_travel_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".QuickLogTagsAppWidgetProvider"
+            android:exported="false"
+            android:label="@string/quick_log_tags_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_log_tags_widget_info" />
         </receiver>
         <service
             android:name=".TravelPhotoMonitorService"

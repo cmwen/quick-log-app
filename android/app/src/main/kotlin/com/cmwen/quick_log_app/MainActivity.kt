@@ -59,20 +59,38 @@ class MainActivity : FlutterActivity() {
 
         prefs.edit()
             .putString(
-                QuickLogWidgetBridge.keyStatusLine,
-                arguments[QuickLogWidgetBridge.keyStatusLine] as? String ?: "Ready to log"
+                QuickLogWidgetBridge.keyTravelStatusLine,
+                arguments[QuickLogWidgetBridge.keyTravelStatusLine] as? String ?: "Ready to log"
             )
             .putString(
-                QuickLogWidgetBridge.keyContentTitle,
-                arguments[QuickLogWidgetBridge.keyContentTitle] as? String ?: "Start your first log"
+                QuickLogWidgetBridge.keyTravelContentTitle,
+                arguments[QuickLogWidgetBridge.keyTravelContentTitle] as? String
+                    ?: "Log current location"
             )
             .putString(
-                QuickLogWidgetBridge.keyContentBody,
-                arguments[QuickLogWidgetBridge.keyContentBody] as? String ?: ""
+                QuickLogWidgetBridge.keyTravelContentBody,
+                arguments[QuickLogWidgetBridge.keyTravelContentBody] as? String ?: ""
             )
             .putString(
-                QuickLogWidgetBridge.keySecondaryActionLabel,
-                arguments[QuickLogWidgetBridge.keySecondaryActionLabel] as? String ?: "Entries"
+                QuickLogWidgetBridge.keyTravelSecondaryActionLabel,
+                arguments[QuickLogWidgetBridge.keyTravelSecondaryActionLabel] as? String ?: "Entries"
+            )
+            .putString(
+                QuickLogWidgetBridge.keyTagsStatusLine,
+                arguments[QuickLogWidgetBridge.keyTagsStatusLine] as? String ?: "Ready to log"
+            )
+            .putString(
+                QuickLogWidgetBridge.keyTagsContentTitle,
+                arguments[QuickLogWidgetBridge.keyTagsContentTitle] as? String
+                    ?: "Start your first log"
+            )
+            .putString(
+                QuickLogWidgetBridge.keyTagsContentBody,
+                arguments[QuickLogWidgetBridge.keyTagsContentBody] as? String ?: ""
+            )
+            .putString(
+                QuickLogWidgetBridge.keyTagsSecondaryActionLabel,
+                arguments[QuickLogWidgetBridge.keyTagsSecondaryActionLabel] as? String ?: "Entries"
             )
             .putString(
                 QuickLogWidgetBridge.keyShortcut1Id,
@@ -101,6 +119,7 @@ class MainActivity : FlutterActivity() {
             .apply()
 
         QuickLogAppWidgetProvider.updateAll(this)
+        QuickLogTagsAppWidgetProvider.updateAll(this)
     }
 
     private fun consumeLaunchAction(): Map<String, String>? {

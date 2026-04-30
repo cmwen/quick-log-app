@@ -10,7 +10,7 @@ import android.view.View
 import android.widget.RemoteViews
 import kotlin.math.absoluteValue
 
-class QuickLogAppWidgetProvider : AppWidgetProvider() {
+class QuickLogTagsAppWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -24,7 +24,7 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
     companion object {
         fun updateAll(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val componentName = ComponentName(context, QuickLogAppWidgetProvider::class.java)
+            val componentName = ComponentName(context, QuickLogTagsAppWidgetProvider::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
             appWidgetIds.forEach { appWidgetId ->
                 updateWidget(context, appWidgetManager, appWidgetId)
@@ -40,24 +40,24 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
                 QuickLogWidgetBridge.preferencesName,
                 Context.MODE_PRIVATE
             )
-            val views = RemoteViews(context.packageName, R.layout.quick_log_widget_travel)
+            val views = RemoteViews(context.packageName, R.layout.quick_log_widget_tags)
 
             views.setTextViewText(
                 R.id.widget_status,
-                prefs.getString(QuickLogWidgetBridge.keyTravelStatusLine, "Ready to log")
+                prefs.getString(QuickLogWidgetBridge.keyTagsStatusLine, "Ready to log")
             )
             views.setTextViewText(
                 R.id.widget_content_title,
                 prefs.getString(
-                    QuickLogWidgetBridge.keyTravelContentTitle,
-                    "Log current location"
+                    QuickLogWidgetBridge.keyTagsContentTitle,
+                    "Start your first log"
                 )
             )
 
             val contentBody =
                 prefs.getString(
-                    QuickLogWidgetBridge.keyTravelContentBody,
-                    "Open Quick Log to save where you are right now."
+                    QuickLogWidgetBridge.keyTagsContentBody,
+                    "Open Quick Log to choose tags and save your first entry."
                 ).orEmpty()
             views.setTextViewText(R.id.widget_content_body, contentBody)
             views.setViewVisibility(
@@ -66,7 +66,7 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
             )
 
             val secondaryLabel =
-                prefs.getString(QuickLogWidgetBridge.keyTravelSecondaryActionLabel, "Entries")
+                prefs.getString(QuickLogWidgetBridge.keyTagsSecondaryActionLabel, "Entries")
                     .orEmpty()
                     .ifBlank { "Entries" }
             views.setTextViewText(R.id.widget_secondary_action, secondaryLabel)
@@ -75,7 +75,7 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
                 R.id.widget_primary_action,
                 createLaunchPendingIntent(
                     context = context,
-                    destination = "quickLocation",
+                    destination = "record",
                     appWidgetId = appWidgetId,
                     requestKey = "primary"
                 )
@@ -93,13 +93,69 @@ class QuickLogAppWidgetProvider : AppWidgetProvider() {
                 R.id.widget_header,
                 createLaunchPendingIntent(
                     context = context,
-                    destination = if (secondaryLabel == "Review") "entries" else "quickLocation",
+                    destination = if (secondaryLabel == "Review") "entries" else "record",
                     appWidgetId = appWidgetId,
                     requestKey = "header"
                 )
             )
 
+            bindShortcutButton(
+                views = views,
+                context = context,
+                appWidgetId = appWidgetId,
+                buttonId = R.id.widget_shortcut_1,
+                label = prefs.getString(QuickLogWidgetBridge.keyShortcut1Label, "").orEmpty(),
+                tagId = prefs.getString(QuickLogWidgetBridge.keyShortcut1Id, "").orEmpty(),
+                requestKey = "shortcut1"
+            )
+            bindShortcutButton(
+                views = views,
+                context = context,
+                appWidgetId = appWidgetId,
+                buttonId = R.id.widget_shortcut_2,
+                label = prefs.getString(QuickLogWidgetBridge.keyShortcut2Label, "").orEmpty(),
+                tagId = prefs.getString(QuickLogWidgetBridge.keyShortcut2Id, "").orEmpty(),
+                requestKey = "shortcut2"
+            )
+            bindShortcutButton(
+                views = views,
+                context = context,
+                appWidgetId = appWidgetId,
+                buttonId = R.id.widget_shortcut_3,
+                label = prefs.getString(QuickLogWidgetBridge.keyShortcut3Label, "").orEmpty(),
+                tagId = prefs.getString(QuickLogWidgetBridge.keyShortcut3Id, "").orEmpty(),
+                requestKey = "shortcut3"
+            )
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun bindShortcutButton(
+            views: RemoteViews,
+            context: Context,
+            appWidgetId: Int,
+            buttonId: Int,
+            label: String,
+            tagId: String,
+            requestKey: String
+        ) {
+            val shouldShow = label.isNotBlank() && tagId.isNotBlank()
+            views.setViewVisibility(buttonId, if (shouldShow) View.VISIBLE else View.GONE)
+            if (!shouldShow) {
+                return
+            }
+
+            views.setTextViewText(buttonId, label)
+            views.setOnClickPendingIntent(
+                buttonId,
+                createLaunchPendingIntent(
+                    context = context,
+                    destination = "record",
+                    appWidgetId = appWidgetId,
+                    requestKey = requestKey,
+                    tagId = tagId
+                )
+            )
         }
 
         private fun createLaunchPendingIntent(
