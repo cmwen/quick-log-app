@@ -161,7 +161,7 @@ keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 100
 - ANDROID_KEY_PASSWORD
 
 # 3. Tag and push
-git tag v1.7.0 && git push origin v1.7.0
+git tag v1.7.1 && git push origin v1.7.1
 ```
 
 ## 📚 Documentation

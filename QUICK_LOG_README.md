@@ -394,7 +394,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📊 Status
 
-- **Version**: 1.7.0+17
+- **Version**: 1.7.1+18
 - **Status**: Stable release with record-screen, theming, and widget polish
 - **Platform**: Android ✅
 
