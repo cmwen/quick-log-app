@@ -2,14 +2,16 @@
 
 Official website: https://cmwen.github.io/quick-log-app
 
-An Android-first tag-based logging app for quick note-taking with smart tag suggestions, optional location tracking, reviewable Travel Mode visit capture, map history, and local import/export. Built with Flutter.
+An Android-first tag-based logging app for quick note-taking with smart tag suggestions, a sticky save action on the Record screen, optional location tracking, reviewable Travel Mode visit capture, dual home screen widgets, and local import/export. Built with Flutter.
 
 ## ✨ Features
 
 - 🏷️ **Tag-First Logging**: Create entries by selecting tags first, then optionally adding notes
 - 💡 **Smart Tag Suggestions**: Suggestions adapt to your time, day, and location patterns
+- 💾 **Sticky Save Action**: Keep a floating save button available when the main save action scrolls off-screen
 - 🔎 **Searchable Tag Picker**: Browse, search, and filter tags by category
-- 🏠 **Android Home Screen Widget**: Glance at your latest log, jump to review travel logs, and relaunch with recent tag shortcuts
+- 🎨 **Dynamic Android Theming**: Material You colors are harmonized automatically on supported Android devices
+- 🏠 **Android Home Screen Widgets**: Use dedicated Travel and Quick Tags widgets for review shortcuts, quick location logging, and recent tag relaunches
 - 📍 **Optional Location Tracking**: Capture location labels and coordinates when enabled
 - ✈️ **Travel Mode Review Queue**: Bundle background tracking and automatic visit capture, then confirm or edit travel logs later
 - 🗺️ **Map View**: Review entries with location data on an interactive map
@@ -66,15 +68,14 @@ flutter build appbundle --release
 2. Let the app quietly save meaningful stops as travel logs that are marked **needs review**.
 3. Open **Entries** to review, edit, tag, or confirm those logs when you are ready.
 
-## 🏠 Android Widget
+## 🏠 Android Widgets
 
-1. Long-press your Android home screen and add the **Quick Log** widget.
-2. The widget defaults to a medium-size layout with:
-   - a status row that prioritizes pending travel-log reviews
-   - your latest saved entry summary
-   - up to 3 recent tag shortcuts once you have used tags in the app
-3. Use **New entry** to jump straight into recording, or **Review** to open the Entries tab when Travel Mode has logs waiting for cleanup.
-4. If you have not saved anything yet, the widget shows a sensible first-run prompt instead of seeded tags.
+1. Long-press your Android home screen and add either the **Travel mode** widget or the **Quick tags** widget.
+2. The **Travel mode** widget keeps quick actions close by:
+   - **Log here** saves your current location when GPS is available
+   - **Review** jumps into the Entries tab when Travel Mode has logs waiting for cleanup
+3. The **Quick tags** widget shows your latest entry summary plus up to 3 recent tag shortcuts for faster relaunches into the Record screen.
+4. Both widgets now use tighter spacing and theme-aware colors so they fit better across Android launchers.
 
 ## 📱 Android Permissions
 
@@ -160,7 +161,7 @@ keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 100
 - ANDROID_KEY_PASSWORD
 
 # 3. Tag and push
-git tag v1.0.0 && git push --tags
+git tag v1.7.0 && git push origin v1.7.0
 ```
 
 ## 📚 Documentation

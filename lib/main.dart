@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_log_app/providers/auto_visit_provider.dart';
@@ -67,25 +68,32 @@ class QuickLogApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return MaterialApp(
-      title: 'Quick Log',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
+    return DynamicColorBuilder(
+      builder: (lightDynamic, darkDynamic) {
+        final fallbackLight = ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
+        );
+        final fallbackDark = ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
-      themeMode: themeProvider.themeMode,
-      home: MainScreen(initialLaunchAction: initialLaunchAction),
-      debugShowCheckedModeBanner: false,
+        );
+
+        return MaterialApp(
+          title: 'Quick Log',
+          theme: ThemeData(
+            colorScheme: lightDynamic?.harmonized() ?? fallbackLight,
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: darkDynamic?.harmonized() ?? fallbackDark,
+            useMaterial3: true,
+          ),
+          themeMode: themeProvider.themeMode,
+          home: MainScreen(initialLaunchAction: initialLaunchAction),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

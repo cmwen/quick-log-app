@@ -36,6 +36,7 @@ A tag-first logging Android application for quick note-taking with optional loca
 
 ### Settings & Customization
 - **Theme Selection** - Choose System, Light, or Dark theme
+- **Dynamic Android Theming** - Material You colors harmonize automatically on supported Android devices
 - **Location Control** - Toggle location tracking on/off
 - **Background Tracking Controls** - Configure background GPS, Travel Mode, and battery saver behavior
 - **Persistent Settings** - Preferences saved across sessions
@@ -44,7 +45,8 @@ A tag-first logging Android application for quick note-taking with optional loca
 ### User Experience
 - **Material Design 3** - Modern, beautiful UI
 - **Dark Mode** - Theme switching based on preference or system
-- **Android Home Screen Widget** - See your latest log, review queue, and recent tag shortcuts without opening the app first
+- **Sticky Save Action** - Keep saving easy on smaller screens once the inline Save button scrolls away
+- **Android Home Screen Widgets** - Use dedicated Travel and Quick Tags widgets for review shortcuts, quick location logging, and recent tag shortcuts
 - **Swipe Actions** - Swipe left to delete, right to edit entries
 - **Offline First** - All data stored locally with SQLite
 - **No Login Required** - Privacy-focused, local-only storage
@@ -112,6 +114,7 @@ flutter build appbundle --release
 3. **Add Note (Optional)** - Write additional context in the note field
 4. **Location** - Location is captured automatically if enabled in Settings
 5. **Save** - Tap "Save Entry" to log your entry
+   - On smaller screens, a floating save button appears once the inline save action scrolls off-screen
 
 > **💡 Tip**: The more you use the app, the smarter the suggestions become! Use tags consistently for best results.
 
@@ -150,16 +153,18 @@ flutter build appbundle --release
     - Edit tags or notes before confirming
     - Delete travel logs you do not want to keep
 
-### Using the Android Home Screen Widget
+### Using the Android Home Screen Widgets
 
-1. Long-press the Android home screen and add the **Quick Log** widget.
-2. Start with the default medium size for the best balance of status, shortcuts, and actions.
-3. Watch the status row:
-   - **Review** appears when Travel Mode has logs waiting for review
-   - otherwise the widget shows your last known location or a ready-to-log state
-4. Tap **New entry** to open the Record tab quickly.
-5. Tap **Review** to jump into the Entries tab when travel logs need cleanup.
-6. Tap a recent tag shortcut to open the Record tab with that tag preselected.
+1. Long-press the Android home screen and add either the **Travel mode** widget or the **Quick tags** widget.
+2. Use the **Travel mode** widget when you want:
+   - **Log here** to save your current location quickly
+   - **Review** to jump into pending Travel Mode logs
+   - a compact status card that reflects location availability and review counts
+3. Use the **Quick tags** widget when you want:
+   - your latest saved entry summary
+   - up to 3 recent tag shortcuts that reopen the Record tab with that tag preselected
+   - a fast path to **New entry** or **Entries**
+4. Both widgets now use tighter spacing and theme-aware colors so they stay readable across Android launcher themes.
 
 ### Using the Map View
 
@@ -228,7 +233,7 @@ flutter build appbundle --release
 - **Export/Import**: share_plus, file_picker
 - **Settings**: shared_preferences
 - **State Management**: Provider with ChangeNotifier-based app settings and background services
-- **UI**: Material Design 3
+- **UI**: Material Design 3 with `dynamic_color` on supported Android devices
 
 ### Project Structure
 
@@ -337,6 +342,9 @@ lib/
 
 ### Phase 4 🔄 In Progress
 - [x] 🆕 Intelligent tag suggestions without AI
+- [x] Sticky save action for the Record screen
+- [x] Dynamic Android theming with Material You support
+- [x] Android home screen widget polish for Travel and Quick Tags layouts
 - [ ] Statistics and insights dashboard
 - [ ] Tag relationship suggestions
 - [ ] Export to additional formats (Markdown, PDF)
@@ -344,7 +352,6 @@ lib/
 
 ### Phase 5 (Future)
 - [ ] Data backup/restore to cloud
-- [ ] Widgets for quick logging
 - [ ] Custom color themes
 - [ ] Voice-to-text for notes
 
@@ -387,8 +394,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📊 Status
 
-- **Version**: 1.0.0+1
-- **Status**: Release - All planned features complete
+- **Version**: 1.7.0+17
+- **Status**: Stable release with record-screen, theming, and widget polish
 - **Platform**: Android ✅
 
 ---

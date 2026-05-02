@@ -205,5 +205,5 @@ Potential improvements for future versions:
 ## Related Documentation
 
 - [QUICK_LOG_README.md](../QUICK_LOG_README.md) - Main app documentation
-- [FEATURE_RELEASE_v1.2.0.md](../FEATURE_RELEASE_v1.2.0.md) - Release notes
+- [FEATURE_RELEASE_v1.7.0.md](../FEATURE_RELEASE_v1.7.0.md) - Release notes
 - [API Documentation](tag_suggestion_service.dart) - Source code with detailed comments

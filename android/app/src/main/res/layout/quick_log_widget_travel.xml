@@ -14,19 +14,9 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/widget_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/quick_log_travel_widget_title"
-            android:textColor="@color/widget_on_surface"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
             android:id="@+id/widget_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="Ready to log"
@@ -38,7 +28,7 @@
         android:id="@+id/widget_content_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="Log current location"

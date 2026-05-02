@@ -146,6 +146,12 @@ Quick Log has been successfully implemented as an Android Flutter application. T
 - [x] **Review Status** - Auto-captured travel logs can stay pending until confirmed
 - [x] **Smart Tag Suggestions** - Suggest tags from historical time, day, and location patterns
 
+### Release v1.7.0 Polish
+- [x] **Sticky Save Action** - The Record screen now shows a floating save action when the inline button scrolls off-screen
+- [x] **Dynamic Android Theming** - Material You colors are harmonized automatically on supported Android devices
+- [x] **Widget Visual Refresh** - Travel and Quick Tags widgets use tighter spacing and theme-aware text colors
+- [x] **Widget Test Coverage** - Added coverage for sticky save button visibility on smaller viewports
+
 ## ⚠️ Partial/Simplified Implementation
 
 These features from the Android docs were adapted for Flutter:
@@ -180,6 +186,7 @@ Features described in the docs that could be added:
 ## 🧪 Testing Status
 
 - [x] **Basic Widget Test** - App starts successfully
+- [x] **Widget Tests** - Sticky save action appears only when the inline save button is off-screen
 - [x] **Unit Tests** - SettingsProvider travel-mode bundling
 - [x] **Unit Tests** - VisitDetectionService travel-mode thresholds
 - [ ] **Unit Tests** - Database operations
@@ -206,6 +213,7 @@ dependencies:
   
   # UI Components
   flutter_chips_input: ^2.0.0   # Chip input widgets
+  dynamic_color: ^1.7.0         # Material You harmonized Android colors
   
   # Map Support
   flutter_map: ^8.2.2           # OpenStreetMap maps
@@ -279,18 +287,16 @@ The Android documentation describes an MVVM architecture with:
 The Flutter implementation uses:
 - Widgets & StatefulWidgets
 - SQLite (sqflite)
-- StatefulWidget state management (could be upgraded to Provider/Riverpod)
-- Direct database access (could be refactored to repository pattern)
+- Provider for app-wide settings/background services plus StatefulWidget UI state where local widget state is sufficient
+- Shared services for persistence and widget synchronization
 
 ### Potential Improvements
 
-1. **State Management** - Consider upgrading to Provider, Riverpod, or Bloc
-2. **Repository Pattern** - Extract database operations into repositories
-3. **Dependency Injection** - Use get_it or provider for DI
-4. **Testing** - Add comprehensive test coverage
-5. **Error Handling** - More robust error handling and retry logic
-6. **Offline Support** - Ensure full offline functionality
-7. **Performance** - Optimize list rendering with pagination
+1. **Search** - Add free-text search across saved entries
+2. **Statistics** - Add lightweight usage insights and trend summaries
+3. **Testing** - Expand widget and integration coverage for multi-step travel flows
+4. **Error Handling** - Add more targeted retry and recovery states for background services
+5. **Performance** - Optimize long entry lists with pagination or lazy loading
 
 ## 🎯 How to Run
 
@@ -329,6 +335,9 @@ The Quick Log app has been successfully implemented with core features including
 - ✅ Map view with OpenStreetMap
 - ✅ Data export (JSON/CSV) and import (JSON)
 - ✅ Settings screen with theme persistence
+- ✅ Dynamic Android theming on supported devices
+- ✅ Sticky save action for small-screen Record flows
+- ✅ Refreshed Travel and Quick Tags home screen widgets
 - ✅ Android-only (streamlined for optimal performance)
 
-The app is **feature-complete for v1.0** and ready for release. Additional features like search, statistics, and analytics can be added incrementally.
+The app is ready for the **v1.7.0** release, which focuses on record-screen ergonomics, Android theming, and widget polish. Additional features like search, statistics, and analytics can still be added incrementally.

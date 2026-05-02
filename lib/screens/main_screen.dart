@@ -28,6 +28,9 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   final TextEditingController _noteController = TextEditingController();
+  final ScrollController _recordScrollController = ScrollController();
+  final GlobalKey _recordViewportKey = GlobalKey();
+  final GlobalKey _inlineSaveButtonKey = GlobalKey();
   final Set<String> _selectedTags = {};
   List<LogTag> _suggestedTags = [];
   List<LogTag> _recentTags = [];
@@ -35,21 +38,27 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
   int _selectedIndex = 0;
   bool _isProcessingWidgetLocationAction = false;
+  bool _showStickySaveButton = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _recordScrollController.addListener(_scheduleStickySaveButtonUpdate);
     _applyInitialLaunchAction();
     _loadTags();
     _loadSuggestedTags();
     unawaited(QuickLogHomeWidgetService.instance.sync());
+    _scheduleStickySaveButtonUpdate();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _noteController.dispose();
+    _recordScrollController
+      ..removeListener(_scheduleStickySaveButtonUpdate)
+      ..dispose();
     super.dispose();
   }
 
@@ -70,8 +79,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _allTags = allTags;
         _isLoading = false;
       });
+      _scheduleStickySaveButtonUpdate();
     } catch (e) {
       setState(() => _isLoading = false);
+      _scheduleStickySaveButtonUpdate();
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -123,6 +134,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         setState(() {
           _suggestedTags = suggested;
         });
+        _scheduleStickySaveButtonUpdate();
       }
     } catch (e) {
       // Silently fail - suggestions are optional
@@ -130,6 +142,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         setState(() {
           _suggestedTags = [];
         });
+        _scheduleStickySaveButtonUpdate();
       }
     }
   }
@@ -142,6 +155,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _selectedTags.add(tagId);
       }
     });
+    _scheduleStickySaveButtonUpdate();
   }
 
   Future<void> _saveEntry() async {
@@ -188,6 +202,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _selectedTags.clear();
         _noteController.clear();
       });
+      _scheduleStickySaveButtonUpdate();
 
       await _loadTags(); // Refresh to update usage counts
       await _loadSuggestedTags(); // Refresh suggestions based on new entry
@@ -246,6 +261,61 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         action.destination == WidgetLaunchDestination.record) {
       _selectedTags.add(action.tagId!);
     }
+
+    _scheduleStickySaveButtonUpdate();
+  }
+
+  void _scheduleStickySaveButtonUpdate() {
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateStickySaveButtonVisibility();
+      }
+    });
+  }
+
+  void _updateStickySaveButtonVisibility() {
+    final shouldShow = _shouldShowStickySaveButton();
+    if (shouldShow == _showStickySaveButton) {
+      return;
+    }
+
+    setState(() {
+      _showStickySaveButton = shouldShow;
+    });
+  }
+
+  bool _shouldShowStickySaveButton() {
+    if (_selectedIndex != 0 || _isLoading) {
+      return false;
+    }
+
+    final viewportContext = _recordViewportKey.currentContext;
+    final buttonContext = _inlineSaveButtonKey.currentContext;
+    if (viewportContext == null || buttonContext == null) {
+      return false;
+    }
+
+    final viewportBox = viewportContext.findRenderObject() as RenderBox?;
+    final buttonBox = buttonContext.findRenderObject() as RenderBox?;
+    if (viewportBox == null ||
+        buttonBox == null ||
+        !viewportBox.hasSize ||
+        !buttonBox.hasSize) {
+      return false;
+    }
+
+    final viewportTop = viewportBox.localToGlobal(Offset.zero).dy;
+    final viewportBottom = viewportTop + viewportBox.size.height;
+    final buttonTop = buttonBox.localToGlobal(Offset.zero).dy;
+    final buttonBottom = buttonTop + buttonBox.size.height;
+
+    final isFullyVisible =
+        buttonTop >= viewportTop + 8 && buttonBottom <= viewportBottom - 8;
+    return !isFullyVisible;
   }
 
   Future<void> _handleQuickLocationLaunchAction() async {
@@ -360,243 +430,261 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       AutoVisitProvider
     >(
       builder: (context, settingsProvider, locationProvider, autoVisitProvider, child) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Smart Suggested Tags Section (context-aware)
-              if (_suggestedTags.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Suggested for You',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Based on time, day, and location patterns',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _suggestedTags.map((tag) {
-                    return TagChipWidget(
-                      tag: tag,
-                      isSelected: _selectedTags.contains(tag.id),
-                      onTap: () => _toggleTag(tag.id),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
-              ],
+        _scheduleStickySaveButtonUpdate();
 
-              // Recent Tags Section
-              Text(
-                'Recently Used Tags',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _recentTags.map((tag) {
-                  return TagChipWidget(
-                    tag: tag,
-                    isSelected: _selectedTags.contains(tag.id),
-                    onTap: () => _toggleTag(tag.id),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 8),
-              TextButton.icon(
-                onPressed: _showAllTags,
-                icon: const Icon(Icons.more_horiz),
-                label: const Text('See all tags'),
-              ),
-
-              // Selected Tags Section
-              if (_selectedTags.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Text(
-                  'Selected Tags (${_selectedTags.length})',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _selectedTags.map((tagId) {
-                    final tag = _allTags.firstWhere((t) => t.id == tagId);
-                    return TagChipWidget(
-                      tag: tag,
-                      isSelected: true,
-                      onTap: () => _toggleTag(tag.id),
-                      showClose: true,
-                    );
-                  }).toList(),
-                ),
-              ],
-              if (_selectedTags.isEmpty &&
-                  settingsProvider.locationEnabled) ...[
-                const SizedBox(height: 16),
-                Card(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
+        return NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.depth == 0) {
+              _scheduleStickySaveButtonUpdate();
+            }
+            return false;
+          },
+          child: KeyedSubtree(
+            key: _recordViewportKey,
+            child: SingleChildScrollView(
+              controller: _recordScrollController,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Smart Suggested Tags Section (context-aware)
+                  if (_suggestedTags.isNotEmpty) ...[
+                    Row(
                       children: [
                         Icon(
-                          Icons.travel_explore,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSecondaryContainer,
+                          Icons.lightbulb_outline,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'No tags selected. If GPS is available, this will save as a lightweight location log.',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Suggested for You',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ],
-
-              // Note Section
-              const SizedBox(height: 24),
-              Text(
-                'Add Note (Optional)',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _noteController,
-                decoration: InputDecoration(
-                  hintText: 'What\'s happening?',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                maxLines: 4,
-              ),
-
-              // Location Section
-              const SizedBox(height: 24),
-              Card(
-                child: ListTile(
-                  leading: Icon(
-                    settingsProvider.locationEnabled
-                        ? (locationProvider.hasLocation
-                              ? Icons.location_on
-                              : Icons.location_searching)
-                        : Icons.location_disabled,
-                    color:
-                        settingsProvider.locationEnabled &&
-                            locationProvider.hasLocation
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                  ),
-                  title: Text(
-                    settingsProvider.locationEnabled
-                        ? (locationProvider.locationLabel ??
-                              'Location not available')
-                        : 'Location tracking disabled',
-                  ),
-                  subtitle: settingsProvider.locationEnabled
-                      ? (locationProvider.hasLocation
-                            ? Text(
-                                'Lat: ${locationProvider.latitude!.toStringAsFixed(4)}, '
-                                'Lon: ${locationProvider.longitude!.toStringAsFixed(4)}',
-                              )
-                            : Text(locationProvider.statusMessage))
-                      : const Text('Enable in Settings to track location'),
-                  trailing: settingsProvider.locationEnabled
-                      ? (locationProvider.isRefreshing
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : IconButton(
-                                icon: const Icon(Icons.refresh),
-                                onPressed: () => locationProvider
-                                    .refreshLocation(promptForPermission: true),
-                              ))
-                      : null,
-                ),
-              ),
-              if (settingsProvider.locationEnabled &&
-                  settingsProvider.backgroundTrackingEnabled) ...[
-                const SizedBox(height: 8),
-                Text(
-                  settingsProvider.batterySaverEnabled
-                      ? 'Background mode uses low-power updates every few minutes to reduce battery drain.'
-                      : 'Background mode uses balanced updates more often for fresher GPS data.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (settingsProvider.autoVisitLoggingEnabled) ...[
-                const SizedBox(height: 8),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.route_outlined),
-                    title: Text(
-                      settingsProvider.travelModeEnabled
-                          ? 'Travel Mode capture'
-                          : 'Travel auto-log',
+                    const SizedBox(height: 8),
+                    Text(
+                      'Based on time, day, and location patterns',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    subtitle: Text(
-                      '${autoVisitProvider.statusMessage}\n'
-                      'New travel logs appear in Entries and stay marked for review until you confirm or edit them.',
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _suggestedTags.map((tag) {
+                        return TagChipWidget(
+                          tag: tag,
+                          isSelected: _selectedTags.contains(tag.id),
+                          onTap: () => _toggleTag(tag.id),
+                        );
+                      }).toList(),
                     ),
-                    isThreeLine: true,
-                    trailing: Icon(
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Recent Tags Section
+                  Text(
+                    'Recently Used Tags',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _recentTags.map((tag) {
+                      return TagChipWidget(
+                        tag: tag,
+                        isSelected: _selectedTags.contains(tag.id),
+                        onTap: () => _toggleTag(tag.id),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: _showAllTags,
+                    icon: const Icon(Icons.more_horiz),
+                    label: const Text('See all tags'),
+                  ),
+
+                  // Selected Tags Section
+                  if (_selectedTags.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      'Selected Tags (${_selectedTags.length})',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _selectedTags.map((tagId) {
+                        final tag = _allTags.firstWhere((t) => t.id == tagId);
+                        return TagChipWidget(
+                          tag: tag,
+                          isSelected: true,
+                          onTap: () => _toggleTag(tag.id),
+                          showClose: true,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                  if (_selectedTags.isEmpty &&
+                      settingsProvider.locationEnabled) ...[
+                    const SizedBox(height: 16),
+                    Card(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.travel_explore,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSecondaryContainer,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'No tags selected. If GPS is available, this will save as a lightweight location log.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Note Section
+                  const SizedBox(height: 24),
+                  Text(
+                    'Add Note (Optional)',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _noteController,
+                    decoration: InputDecoration(
+                      hintText: 'What\'s happening?',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    maxLines: 4,
+                  ),
+
+                  // Location Section
+                  const SizedBox(height: 24),
+                  Card(
+                    child: ListTile(
+                      leading: Icon(
+                        settingsProvider.locationEnabled
+                            ? (locationProvider.hasLocation
+                                  ? Icons.location_on
+                                  : Icons.location_searching)
+                            : Icons.location_disabled,
+                        color:
+                            settingsProvider.locationEnabled &&
+                                locationProvider.hasLocation
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      title: Text(
+                        settingsProvider.locationEnabled
+                            ? (locationProvider.locationLabel ??
+                                  'Location not available')
+                            : 'Location tracking disabled',
+                      ),
+                      subtitle: settingsProvider.locationEnabled
+                          ? (locationProvider.hasLocation
+                                ? Text(
+                                    'Lat: ${locationProvider.latitude!.toStringAsFixed(4)}, '
+                                    'Lon: ${locationProvider.longitude!.toStringAsFixed(4)}',
+                                  )
+                                : Text(locationProvider.statusMessage))
+                          : const Text('Enable in Settings to track location'),
+                      trailing: settingsProvider.locationEnabled
+                          ? (locationProvider.isRefreshing
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    onPressed: () =>
+                                        locationProvider.refreshLocation(
+                                          promptForPermission: true,
+                                        ),
+                                  ))
+                          : null,
+                    ),
+                  ),
+                  if (settingsProvider.locationEnabled &&
+                      settingsProvider.backgroundTrackingEnabled) ...[
+                    const SizedBox(height: 8),
+                    Text(
                       settingsProvider.batterySaverEnabled
-                          ? Icons.battery_saver_outlined
-                          : Icons.gps_fixed,
+                          ? 'Background mode uses low-power updates every few minutes to reduce battery drain.'
+                          : 'Background mode uses balanced updates more often for fresher GPS data.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (settingsProvider.autoVisitLoggingEnabled) ...[
+                    const SizedBox(height: 8),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.route_outlined),
+                        title: Text(
+                          settingsProvider.travelModeEnabled
+                              ? 'Travel Mode capture'
+                              : 'Travel auto-log',
+                        ),
+                        subtitle: Text(
+                          '${autoVisitProvider.statusMessage}\n'
+                          'New travel logs appear in Entries and stay marked for review until you confirm or edit them.',
+                        ),
+                        isThreeLine: true,
+                        trailing: Icon(
+                          settingsProvider.batterySaverEnabled
+                              ? Icons.battery_saver_outlined
+                              : Icons.gps_fixed,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Save Button
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      key: _inlineSaveButtonKey,
+                      onPressed: _saveEntry,
+                      icon: const Icon(Icons.save),
+                      label: const Text('Save Entry'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.all(16),
+                      ),
                     ),
                   ),
-                ),
-              ],
-
-              // Save Button
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _saveEntry,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save Entry'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -659,10 +747,19 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         ],
       ),
       body: screens[_selectedIndex],
+      floatingActionButton: _selectedIndex == 0 && _showStickySaveButton
+          ? FloatingActionButton.small(
+              onPressed: _saveEntry,
+              tooltip: 'Save entry',
+              child: const Icon(Icons.save),
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _selectedIndex = index),
+        onDestinationSelected: (index) {
+          setState(() => _selectedIndex = index);
+          _scheduleStickySaveButtonUpdate();
+        },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.edit), label: 'Record'),
           NavigationDestination(icon: Icon(Icons.list), label: 'Entries'),

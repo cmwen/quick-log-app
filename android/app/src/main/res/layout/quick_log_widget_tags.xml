@@ -15,19 +15,9 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/widget_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/quick_log_tags_widget_title"
-            android:textColor="@color/widget_on_surface"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
             android:id="@+id/widget_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:text="Ready to log"
             android:textColor="@color/widget_muted_text"
             android:textSize="12sp" />
@@ -37,7 +27,7 @@
         android:id="@+id/widget_content_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="Start your first log"
