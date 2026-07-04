@@ -3,8 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 
 const githubRepoUrl = 'https://github.com/cmwen/quick-log-app';
 const latestReleaseUrl = 'https://github.com/cmwen/quick-log-app/releases/latest';
-const latestApkUrl = 'https://github.com/cmwen/quick-log-app/releases/download/v1.7.1/quick-log-app-1.7.1%2B12.apk';
 const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%253A%252F%252Fgithub.com%252Fcmwen%252Fquick-log-app';
+const baseUrlRaw = import.meta.env.BASE_URL;
+const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
+const latestApkUrl = `${baseUrl}downloads/latest.apk`;
 ---
 
 <BaseLayout title="Experimental WebUSB Install">
@@ -44,6 +46,7 @@ const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fa
     <div class="card">
       <h3>WebUSB installer</h3>
       <p id="webusb-support" class="lead">Checking browser support...</p>
+      <p class="lead">The default APK URL is served from this GitHub Pages site to avoid GitHub Release asset CORS restrictions. If it is not available yet, download the APK from the release page and use the local APK option.</p>
 
       <div class="field">
         <label for="apk-url">APK URL</label>
@@ -67,7 +70,7 @@ const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fa
         <li>The browser asks for permission to access one ADB-capable USB device.</li>
         <li>The device shows the normal Android USB debugging authorization prompt.</li>
         <li>The page authenticates with ADB and streams an APK into Android Package Manager.</li>
-        <li>If the URL fetch is blocked by CORS, download the APK first and use the local APK button.</li>
+        <li>The Pages deploy workflow copies the latest release APK to a same-origin download path so the browser can fetch it.</li>
       </ol>
       <p>Source repository: <a href={githubRepoUrl} target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">cmwen/quick-log-app</a>.</p>
     </div>
@@ -174,6 +177,32 @@ const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fa
       log('Install command completed.');
     };
 
+    const responseToBlob = async (response) => {
+      const contentLength = Number(response.headers.get('content-length'));
+      if (!response.body || !Number.isFinite(contentLength) || contentLength <= 0) {
+        return response.blob();
+      }
+
+      const reader = response.body.getReader();
+      const chunks = [];
+      let loaded = 0;
+
+      while (true) {
+        const result = await reader.read();
+        if (result.done) {
+          break;
+        }
+
+        chunks.push(result.value);
+        loaded += result.value.byteLength;
+        log(`Downloaded APK: ${Math.round((loaded / contentLength) * 100)}%`);
+      }
+
+      return new Blob(chunks, {
+        type: response.headers.get('content-type') || 'application/vnd.android.package-archive',
+      });
+    };
+
     const installFromUrl = async () => {
       const apkUrl = apkUrlInput.value.trim();
       if (!apkUrl) {
@@ -183,10 +212,10 @@ const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fa
       log(`Fetching APK from ${apkUrl}`);
       const response = await fetch(apkUrl, { mode: 'cors' });
       if (!response.ok) {
-        throw new Error(`APK request failed with HTTP ${response.status}.`);
+        throw new Error(`APK request failed with HTTP ${response.status}. If the default Pages APK has not been deployed yet, download the release APK and use Install local APK.`);
       }
 
-      const blob = await response.blob();
+      const blob = await responseToBlob(response);
       await installBlob(blob, 'downloaded APK');
     };
 

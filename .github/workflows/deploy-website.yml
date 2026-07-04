@@ -43,6 +43,23 @@ jobs:
           npm ci --prefer-offline
           npm run build
 
+      - name: Bundle latest APK for WebUSB installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p astro/dist/downloads
+          gh release download \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern "*.apk" \
+            --dir astro/dist/downloads \
+            --clobber
+          apk_path="$(find astro/dist/downloads -maxdepth 1 -type f -name "*.apk" | sort | tail -n 1)"
+          if [ -z "${apk_path}" ]; then
+            echo "No APK release asset found"
+            exit 1
+          fi
+          cp "${apk_path}" astro/dist/downloads/latest.apk
+
       - name: Upload static build
         uses: actions/upload-pages-artifact@v5
         with:
