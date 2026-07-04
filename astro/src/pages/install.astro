@@ -1,5 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+
+const baseUrlRaw = import.meta.env.BASE_URL;
+const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
+const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%253A%252F%252Fgithub.com%252Fcmwen%252Fquick-log-app';
 ---
 
 <BaseLayout title="Install / Getting Started">
@@ -7,6 +11,16 @@ import BaseLayout from '../layouts/BaseLayout.astro'
     <h2>Install & build guide</h2>
 
     <p class="lead">This guide shows how to run Quick Log locally and how to build Android release artifacts.</p>
+
+    <div class="card">
+      <h3>Install options</h3>
+      <p class="lead">For normal sideloading, download the APK from GitHub Releases. For update tracking, add the repository to Obtainium. For a hardware experiment, try the WebUSB installer from a desktop Chromium browser.</p>
+      <div class="cta-row">
+        <a class="button primary" href="https://github.com/cmwen/quick-log-app/releases/latest" target="_blank" rel="noopener">Download APK</a>
+        <a class="button" href={obtainiumUrl} target="_blank" rel="noopener">Add to Obtainium</a>
+        <a class="button" href={`${baseUrl}web-usb-install/`}>Experimental WebUSB</a>
+      </div>
+    </div>
 
     <div class="card">
       <h3>Prerequisites</h3>

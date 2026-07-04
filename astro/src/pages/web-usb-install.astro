@@ -1,0 +1,233 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const githubRepoUrl = 'https://github.com/cmwen/quick-log-app';
+const latestReleaseUrl = 'https://github.com/cmwen/quick-log-app/releases/latest';
+const latestApkUrl = 'https://github.com/cmwen/quick-log-app/releases/download/v1.7.1/quick-log-app-1.7.1%2B12.apk';
+const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%253A%252F%252Fgithub.com%252Fcmwen%252Fquick-log-app';
+---
+
+<BaseLayout title="Experimental WebUSB Install">
+  <section>
+    <p class="status-pill warning">Experimental</p>
+    <h2>Install Quick Log over USB from your browser</h2>
+    <p class="lead">This page is a static GitHub Pages experiment that tries to use WebUSB and ADB to install the Quick Log APK. It is intended for testing with a desktop Chromium browser and a USB-connected Android device.</p>
+
+    <div class="card notice">
+      <h3>Before you try it</h3>
+      <p><strong>This is experimental.</strong> You will be giving this page temporary ADB access to the device you choose in the browser picker. Use it only with a device you control, and expect browser, driver, USB mode, CORS, or Android installer prompts to fail while this is being tested.</p>
+    </div>
+
+    <div class="install-grid">
+      <div class="card install-panel">
+        <h3>Recommended paths</h3>
+        <p class="lead">If the browser install path fails, these are the reliable options.</p>
+        <div class="cta-row">
+          <a class="button primary" href={latestReleaseUrl} target="_blank" rel="noopener">Download APK</a>
+          <a class="button" href={obtainiumUrl} target="_blank" rel="noopener">Add to Obtainium</a>
+        </div>
+        <p>Obtainium tracks this GitHub repository and can install future release APKs directly from the source.</p>
+      </div>
+
+      <div class="card install-panel">
+        <h3>Requirements</h3>
+        <ul>
+          <li>Chrome, Edge, or another Chromium browser with WebUSB</li>
+          <li>Android device connected over USB</li>
+          <li>Developer options and USB debugging enabled</li>
+          <li>ADB authorization accepted on the device</li>
+          <li>No other ADB process currently using the device</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>WebUSB installer</h3>
+      <p id="webusb-support" class="lead">Checking browser support...</p>
+
+      <div class="field">
+        <label for="apk-url">APK URL</label>
+        <input id="apk-url" type="url" value={latestApkUrl} />
+      </div>
+
+      <div class="cta-row">
+        <button id="connect-device" class="button primary" type="button">Connect Android device</button>
+        <button id="install-url" class="button" type="button" disabled>Install APK from URL</button>
+        <label class="button" for="apk-file">Install local APK</label>
+        <input id="apk-file" type="file" accept=".apk,application/vnd.android.package-archive" hidden disabled />
+        <button id="disconnect-device" class="button" type="button" disabled>Disconnect</button>
+      </div>
+
+      <pre id="webusb-log" class="log-box" aria-live="polite">Ready.</pre>
+    </div>
+
+    <div class="card">
+      <h3>How this works</h3>
+      <ol>
+        <li>The browser asks for permission to access one ADB-capable USB device.</li>
+        <li>The device shows the normal Android USB debugging authorization prompt.</li>
+        <li>The page authenticates with ADB and streams an APK into Android Package Manager.</li>
+        <li>If the URL fetch is blocked by CORS, download the APK first and use the local APK button.</li>
+      </ol>
+      <p>Source repository: <a href={githubRepoUrl} target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">cmwen/quick-log-app</a>.</p>
+    </div>
+  </section>
+
+  <script>
+    import { Adb, AdbDaemonTransport } from '@yume-chan/adb';
+    import AdbWebCredentialStore from '@yume-chan/adb-credential-web';
+    import { AdbDaemonWebUsbDeviceManager } from '@yume-chan/adb-daemon-webusb';
+    import { PackageManager, PackageManagerInstallReason } from '@yume-chan/android-bin';
+    import { ReadableStream } from '@yume-chan/stream-extra';
+
+    const supportNode = document.querySelector('#webusb-support');
+    const logNode = document.querySelector('#webusb-log');
+    const apkUrlInput = document.querySelector('#apk-url');
+    const connectButton = document.querySelector('#connect-device');
+    const installUrlButton = document.querySelector('#install-url');
+    const apkFileInput = document.querySelector('#apk-file');
+    const disconnectButton = document.querySelector('#disconnect-device');
+
+    let adb = undefined;
+
+    const setDisabled = (connected) => {
+      installUrlButton.disabled = !connected;
+      apkFileInput.disabled = !connected;
+      disconnectButton.disabled = !connected;
+      connectButton.disabled = connected;
+    };
+
+    const log = (message) => {
+      const timestamp = new Date().toLocaleTimeString();
+      logNode.textContent += `\n[${timestamp}] ${message}`;
+      logNode.scrollTop = logNode.scrollHeight;
+    };
+
+    const assertWebUsb = () => {
+      if (!('usb' in navigator) || !AdbDaemonWebUsbDeviceManager.BROWSER) {
+        throw new Error('This browser does not expose WebUSB. Try desktop Chrome or Edge over HTTPS.');
+      }
+    };
+
+    const blobToTangoStream = (blob) => {
+      const reader = blob.stream().getReader();
+      let loaded = 0;
+      const total = blob.size;
+
+      return new ReadableStream({
+        async pull(controller) {
+          const result = await reader.read();
+          if (result.done) {
+            controller.close();
+            return;
+          }
+
+          loaded += result.value.byteLength;
+          if (loaded === result.value.byteLength || loaded === total) {
+            log(`Streaming APK: ${Math.round((loaded / total) * 100)}%`);
+          }
+          controller.enqueue(result.value);
+        },
+        cancel(reason) {
+          return reader.cancel(reason);
+        },
+      });
+    };
+
+    const connectDevice = async () => {
+      assertWebUsb();
+      const manager = AdbDaemonWebUsbDeviceManager.BROWSER;
+
+      log('Opening browser USB picker...');
+      const device = await manager.requestDevice();
+      if (!device) {
+        log('No device selected.');
+        return;
+      }
+
+      log(`Selected ${device.name || device.serial}. If Android asks, allow USB debugging.`);
+      const connection = await device.connect();
+      const credentialStore = new AdbWebCredentialStore('Quick Log WebUSB Installer');
+      const transport = await AdbDaemonTransport.authenticate({
+        serial: device.serial,
+        connection,
+        credentialStore,
+      });
+
+      adb = new Adb(transport);
+      const deviceLabel = adb.banner.model || adb.banner.device || adb.serial;
+      log(`Connected to ${deviceLabel}.`);
+      setDisabled(true);
+    };
+
+    const installBlob = async (blob, sourceLabel) => {
+      if (!adb) {
+        throw new Error('Connect an Android device first.');
+      }
+
+      log(`Installing ${sourceLabel} (${Math.round(blob.size / 1024 / 1024)} MB)...`);
+      const packageManager = new PackageManager(adb);
+      await packageManager.installStream(blob.size, blobToTangoStream(blob), {
+        grantRuntimePermissions: true,
+        installReason: PackageManagerInstallReason.UserRequest,
+      });
+      log('Install command completed.');
+    };
+
+    const installFromUrl = async () => {
+      const apkUrl = apkUrlInput.value.trim();
+      if (!apkUrl) {
+        throw new Error('Enter an APK URL first.');
+      }
+
+      log(`Fetching APK from ${apkUrl}`);
+      const response = await fetch(apkUrl, { mode: 'cors' });
+      if (!response.ok) {
+        throw new Error(`APK request failed with HTTP ${response.status}.`);
+      }
+
+      const blob = await response.blob();
+      await installBlob(blob, 'downloaded APK');
+    };
+
+    const installFromFile = async () => {
+      const file = apkFileInput.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      await installBlob(file, file.name);
+      apkFileInput.value = '';
+    };
+
+    const disconnectDevice = async () => {
+      if (adb) {
+        await adb.close();
+        adb = undefined;
+      }
+      setDisabled(false);
+      log('Disconnected.');
+    };
+
+    const run = (task) => async () => {
+      try {
+        await task();
+      } catch (error) {
+        log(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    };
+
+    if ('usb' in navigator && AdbDaemonWebUsbDeviceManager.BROWSER) {
+      supportNode.textContent = 'WebUSB is available in this browser. Connect a device to begin.';
+      setDisabled(false);
+    } else {
+      supportNode.textContent = 'WebUSB is not available in this browser. Use desktop Chrome or Edge over HTTPS, or use the download/Obtainium options.';
+      connectButton.disabled = true;
+    }
+
+    connectButton.addEventListener('click', run(connectDevice));
+    installUrlButton.addEventListener('click', run(installFromUrl));
+    apkFileInput.addEventListener('change', run(installFromFile));
+    disconnectButton.addEventListener('click', run(disconnectDevice));
+  </script>
+</BaseLayout>
