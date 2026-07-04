@@ -175,7 +175,7 @@ class DataExportService {
 
   /// Import tags only from JSON file
   Future<ImportResult> importTagsFromJson() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
@@ -245,7 +245,7 @@ class DataExportService {
 
   /// Import data from JSON file
   Future<ImportResult> importFromJson() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );

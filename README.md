@@ -20,6 +20,14 @@ An Android-first tag-based logging app for quick note-taking with smart tag sugg
 - ⚙️ **Settings**: Theme selection, location toggle, background tracking, Travel Mode bundle, and GPS battery saver
 - 🗄️ **Local-Only Storage**: Entries and tags stay on-device in SQLite
 
+## 📦 Install
+
+- **Download APK**: [Latest GitHub Release](https://github.com/cmwen/quick-log-app/releases/latest)
+- **Track updates with Obtainium**: [Add Quick Log to Obtainium](https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%253A%252F%252Fgithub.com%252Fcmwen%252Fquick-log-app)
+- **Experimental WebUSB installer**: [Try the GitHub Pages WebUSB install page](https://cmwen.github.io/quick-log-app/web-usb-install/)
+
+The WebUSB installer is experimental and intended for desktop Chromium browsers with an Android device connected over USB debugging. If it fails, use the APK download or Obtainium path.
+
 ## 🚀 Quick Start
 
 ### Prerequisites

@@ -23,6 +23,7 @@ const isActive = (href: string): boolean => {
       <a href={baseUrl} class={isActive('/') ? 'active' : undefined}>Home</a>
       <a href={`${baseUrl}about/`} class={isActive('/about/') ? 'active' : undefined}>About</a>
       <a href={`${baseUrl}install/`} class={isActive('/install/') ? 'active' : undefined}>Install</a>
+      <a href={`${baseUrl}web-usb-install/`} class={isActive('/web-usb-install/') ? 'active' : undefined}>WebUSB</a>
       <a href={`${baseUrl}releases/`} class={isActive('/releases/') ? 'active' : undefined}>Releases</a>
       <a href="https://github.com/cmwen/quick-log-app" target="_blank" rel="noopener">Repository</a>
     </nav>

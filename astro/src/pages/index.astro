@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 
 const baseUrlRaw = import.meta.env.BASE_URL;
 const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
+const obtainiumUrl = 'https://apps.obtainium.page/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%253A%252F%252Fgithub.com%252Fcmwen%252Fquick-log-app';
 ---
 <BaseLayout title="Quick Log">
   <section>
@@ -11,6 +12,8 @@ const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
 
     <div class="cta-row">
       <a class="button primary" href="https://github.com/cmwen/quick-log-app/releases/latest" target="_blank" rel="noopener">View latest release</a>
+      <a class="button" href={obtainiumUrl} target="_blank" rel="noopener">Add to Obtainium</a>
+      <a class="button" href={`${baseUrl}web-usb-install/`}>Try WebUSB install</a>
       <a class="button" href="https://github.com/cmwen/quick-log-app" target="_blank" rel="noopener">Open repository</a>
     </div>
 
@@ -36,7 +39,7 @@ const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw : `${baseUrlRaw}/`;
 
     <div class="card">
       <h3>Downloads</h3>
-      <p class="lead">Releases (when published) are hosted on GitHub. If you don't see an APK/AAB yet, you can build locally from source.</p>
+      <p class="lead">Releases are hosted on GitHub. You can download the APK directly, track the app with Obtainium, or try the experimental WebUSB installer.</p>
       <p><a href="https://github.com/cmwen/quick-log-app/releases/latest" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Open downloads →</a></p>
     </div>
 
