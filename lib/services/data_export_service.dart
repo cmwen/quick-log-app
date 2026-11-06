@@ -180,12 +180,12 @@ class DataExportService {
       allowedExtensions: ['json'],
     );
 
-    if (result == null || result.files.isEmpty) {
+    if (result.isEmpty) {
       return ImportResult(success: false, message: 'No file selected');
     }
 
     try {
-      final file = File(result.files.first.path!);
+      final file = File(result.first.path!);
       final content = await file.readAsString();
       final data = jsonDecode(content) as Map<String, dynamic>;
 
@@ -250,12 +250,12 @@ class DataExportService {
       allowedExtensions: ['json'],
     );
 
-    if (result == null || result.files.isEmpty) {
+    if (result.isEmpty) {
       return ImportResult(success: false, message: 'No file selected');
     }
 
     try {
-      final file = File(result.files.first.path!);
+      final file = File(result.first.path!);
       final content = await file.readAsString();
       final data = jsonDecode(content) as Map<String, dynamic>;
 
